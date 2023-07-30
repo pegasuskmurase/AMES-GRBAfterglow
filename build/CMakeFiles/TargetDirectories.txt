@@ -1,0 +1,8 @@
+/Users/bzhang/Research/Code/GitHub/AMES-GRBAfterglow/build/CMakeFiles/AMES.dir
+/Users/bzhang/Research/Code/GitHub/AMES-GRBAfterglow/build/CMakeFiles/AMES_swig_compilation.dir
+/Users/bzhang/Research/Code/GitHub/AMES-GRBAfterglow/build/CMakeFiles/edit_cache.dir
+/Users/bzhang/Research/Code/GitHub/AMES-GRBAfterglow/build/CMakeFiles/rebuild_cache.dir
+/Users/bzhang/Research/Code/GitHub/AMES-GRBAfterglow/build/CMakeFiles/list_install_components.dir
+/Users/bzhang/Research/Code/GitHub/AMES-GRBAfterglow/build/CMakeFiles/install.dir
+/Users/bzhang/Research/Code/GitHub/AMES-GRBAfterglow/build/CMakeFiles/install/local.dir
+/Users/bzhang/Research/Code/GitHub/AMES-GRBAfterglow/build/CMakeFiles/install/strip.dir

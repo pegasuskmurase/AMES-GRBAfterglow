@@ -1,0 +1,2 @@
+1, output unit [eV^-1 cm^-2, s^-1]
+2, input spectral index should be positive
