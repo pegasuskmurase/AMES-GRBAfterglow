@@ -40,27 +40,9 @@ public:
                 const std::vector<double> &photon_energy, std::vector<double> &photon_intetime,
                 double redshift);
 
-  //
-  void Spec(const std::vector<double> &primary_energy, const std::vector<double> &secondary_energy,
-            const std::vector<double> &target_energy, const std::vector<double> &target_spectrum);
-  void SpecMuon(const std::vector<double> &primary_energy,
-                const std::vector<double> &secondary_energy,
-                const std::vector<double> &target_energy,
-                const std::vector<double> &target_spectrum);
-  void SpecApprox(const std::vector<double> &primary_energy,
-                  const std::vector<double> &secondary_energy,
-                  const std::vector<double> &photon_intetime);
-
   void Attenuation(const std::vector<double> &photon_energy, std::vector<double> &photon_spectrum);
   void Attenuation(std::vector<double> &photon_spectrum);
 
-  void Table();
-  void Table_Lee1998();
-  void Table_Zdziarski1988();
-  std::vector<std::vector<double>> spec;
-  std::vector<std::vector<std::vector<double>>> table;
-  void TableMuon();
-  std::vector<std::vector<std::vector<double>>> table_muon;
   // return Compton cross section (sigma * c)
   double GGCross(double xs) {
     return u.Interpolate(mandelstam, GGcrossT, xs, (int)(log10(xs) / mandelstam_bin));
@@ -81,17 +63,6 @@ private:
                 const std::vector<double> &target_spectrum,
                 const std::vector<double> &particle_energy, std::vector<double> &particle_losstime);
 
-  void Spec(const std::vector<double> &primary_energy, const std::vector<double> &secondary_energy,
-            const std::vector<double> &target_energy, const std::vector<double> &target_spectrum,
-            const std::vector<std::vector<std::vector<double>>> &table,
-            std::vector<std::vector<double>> &spec);
-  void SpecMuon(const std::vector<double> &primary_energy,
-                const std::vector<double> &secondary_energy,
-                const std::vector<double> &target_energy,
-                const std::vector<double> &target_spectrum,
-                const std::vector<std::vector<std::vector<double>>> &table_muon,
-                std::vector<std::vector<double>> &spec);
-
   void EGGCrossTable();
   void GGCrossTable();
   void ReadCross();
@@ -102,8 +73,6 @@ private:
   std::vector<double> EGGcrossT;
   std::vector<std::vector<double>> GGCross_table;
   std::vector<std::vector<double>> EGGCross_table;
-  void GGCrossTableMuon();
-  std::vector<std::vector<double>> GGCross_table_muon;
 
   void setAngular();
   size_t angular_num = 51;

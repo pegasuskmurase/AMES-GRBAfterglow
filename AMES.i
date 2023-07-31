@@ -198,37 +198,12 @@ class Source
 
     void setParticle(); //set particles, default in constructor
     void setParam(); //set parameters, default in constructor
-    void setNucleus(int mass_number, int charge_number);
     void showParam();
 
     Particle& getPhoton();    
     Particle& getTarget(); 
     Particle& getElectron(); 
-    Particle& getNeutrino(); 
-    Particle& getPionplus(); 
-    Particle& getPionminus(); 
-    Particle& getPionzero(); 
-    Particle& getMuonminusL();
-    Particle& getMuonminusR();
-    Particle& getMuonplusL();
-    Particle& getMuonplusR();
-    Particle& getProton(); 
-    Particle& getNeutron(); 
-    Particle& getNucleus(); 
     Param& getParam(); 
-
-    private:
-    Particle photon;
-    Particle target;
-    Particle electron;
-    Particle neutrino;
-    Particle pion;
-    Particle pion0;
-    Particle muon;
-    Particle proton;
-    Particle nucleus;
-
-    Param param;
 };
 
 class Cosmology
@@ -332,14 +307,6 @@ public:
   void Intetime(const std::vector<double> &target_energy,
                 const std::vector<double> &target_spectrum,
                 const std::vector<double> &photon_energy, std::vector<double> &photon_intetime);
-
-  //
-  void Spec(const std::vector<double> &primary_energy, const std::vector<double> &secondary_energy,
-            const std::vector<double> &target_energy, const std::vector<double> &target_spectrum);
-  void Table();
-  void Table_Lee1998();
-  void Table_Zdziarski1988();
-  std::vector<std::vector<double>> spec;
 
   void Test();
 };
