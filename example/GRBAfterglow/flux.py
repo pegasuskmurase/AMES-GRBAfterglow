@@ -70,6 +70,7 @@ class GRB:
         grb.Flux(self.time_array, self.energy_array_min, self.energy_array_max)
 
     def plot_spectrum(self):
+        cm_subsection = np.linspace(0.2, 1, len(self.time_array))
         colors = [cm.YlOrBr(x) for x in cm_subsection]
         fig, ax = plt.subplots()
         data = np.loadtxt('result-onezone/spectrum.dat')
