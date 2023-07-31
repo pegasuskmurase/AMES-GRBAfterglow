@@ -199,8 +199,8 @@ void ElectronDistribution::IterationSolution(Synchrotron &syn, InverseCompton &I
     u_err = 0.0;
     for (size_t j = 0; j < N; j++) {
       e_loss_tot[j] = e_loss_EIC[j] + e_loss_Syn[j] + e_loss_SSC[j];
-      //e_loss_tot[j] = e_loss_Syn[j];
     }
+
     for (size_t j = 0; j < N; j++) {
       dum = e_loss_tot[j] * t_dyn;
       if (dum > 1.) {
