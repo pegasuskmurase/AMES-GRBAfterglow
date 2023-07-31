@@ -8,6 +8,7 @@
 // \brief Calculate emissions GRB afterglow
 
 #include "GRBAfterglow.hpp"
+#include "module/photonbackground.hpp"
 #include "module/rk5.hpp"
 
 #include <fstream>
@@ -17,22 +18,6 @@ GRBAfterglow::GRBAfterglow(Source &s) : s(s) {
   s.getTarget().setMomentum(321, 1e-9, 1e10);
   s.getPhoton().setMomentum(241, 1e-8, 1e16);
   s.getElectron().setMomentum(241, 1e4, 1e16);
-  num_t = s.getTarget().getEnergy().size();
-  num_p = s.getPhoton().getEnergy().size();
-  num_e = s.getElectron().getEnergy().size();
-  target_energy = s.getTarget().getEnergy();
-  photon_energy = s.getPhoton().getEnergy();
-  photon_syn.resize(num_p, 0.0);
-  photon_ssc.resize(num_p, 0.0);
-  photon_syn_temp.resize(num_p, 0.0);
-  photon_syn_absorption_SSA.resize(num_p, 0.0);
-  photon_syn_obs.resize(num_p, 0.0);
-  photon_ssc_temp.resize(num_p, 0.0);
-  photon_ssc_obs.resize(num_p, 0.0);
-  photon_losstime.resize(num_p, 0.0);
-  target_syn.resize(num_t, 0.0);
-  photon_tot.resize(num_p, 0.0);
-  photon_tot_diff.resize(num_p, 0.0);
 }
 
 void GRBAfterglow::help() {
@@ -62,6 +47,25 @@ void GRBAfterglow::help() {
   std::cout << "***Run the code with more details***" << std::endl;
   std::cout << "    See test/GRBAfterglow_user.py" << std::endl;
   */
+}
+
+void GRBAfterglow::Init() {
+  num_t = s.getTarget().getEnergy().size();
+  num_p = s.getPhoton().getEnergy().size();
+  num_e = s.getElectron().getEnergy().size();
+  target_energy = s.getTarget().getEnergy();
+  photon_energy = s.getPhoton().getEnergy();
+  photon_syn.resize(num_p, 0.0);
+  photon_ssc.resize(num_p, 0.0);
+  photon_syn_temp.resize(num_p, 0.0);
+  photon_syn_absorption_SSA.resize(num_p, 0.0);
+  photon_syn_obs.resize(num_p, 0.0);
+  photon_ssc_temp.resize(num_p, 0.0);
+  photon_ssc_obs.resize(num_p, 0.0);
+  photon_losstime.resize(num_p, 0.0);
+  target_syn.resize(num_t, 0.0);
+  photon_tot.resize(num_p, 0.0);
+  photon_tot_diff.resize(num_p, 0.0);
 }
 
 void GRBAfterglow::setGRBAfterglowParam(std::vector<double> _param) {
@@ -106,10 +110,13 @@ void GRBAfterglow::Flux(const std::vector<double> &time_array,
                         const std::vector<double> &energy_array_min,
                         const std::vector<double> &energy_array_max) {
 
+  Init();
+
   ElectronDistribution ED(s);
   Synchrotron syn(s);
   InverseCompton IC(s);
   GammaGamma gg(s);
+  Photonbackground ph(s);
 
   if (have_onezone) {
   } else {
@@ -127,6 +134,12 @@ void GRBAfterglow::Flux(const std::vector<double> &time_array,
     std::cout << " t " << t << std::endl;
 
     Spectrum(ED, syn, IC, gg, t);
+
+    if (have_attenu_GG_cosmic) {
+      ph.EBLTau(param.z, ph.EBL_Gilmore12());
+      ph.EBLAttenuation(photon_energy, photon_syn);
+      ph.EBLAttenuation(photon_energy, photon_ssc);
+    }
 
     for (size_t i = 0; i < num_p; i++) {
       mystream_spectrum << photon_energy[i] << " ";
@@ -157,8 +170,6 @@ void GRBAfterglow::Flux(const std::vector<double> &time_array,
 
 void GRBAfterglow::Spectrum(ElectronDistribution &ED, Synchrotron &syn, InverseCompton &IC,
                             GammaGamma &gg, double T) {
-
-  // Photonbackground ph(s);
   double syn_dum, ssc_dum;
   if (have_onezone) {
     double Gamma, radius;

@@ -178,6 +178,7 @@ void Photonbackground::EBL_Franceschini08(double redshift) {
   }
 }
 
+
 void Photonbackground::EBLTau_Franceschini08(double redshift) {
   std::vector<double> opdep_redshift;
   std::vector<double> opdep_energy;

@@ -35,9 +35,6 @@ public:
   void Spec(const std::vector<double> &primary_energy, const std::vector<double> &secondary_energy,
             const std::vector<double> &target_energy, const std::vector<double> &target_spectrum);
 
-  void SpecElectron(const std::vector<double> &primary_energy, const std::vector<double> &secondary_energy,
-            const std::vector<double> &target_energy, const std::vector<double> &target_spectrum);
-
   // radiation emissivity in units [eV^-1 s^-1 cm^-3]
   void Emissivity(const std::vector<std::vector<double>> &spec,
                   const std::vector<double> &primary_momentum,
@@ -52,16 +49,9 @@ public:
                   std::vector<double> &photon_spectrum);
 
   void Table(); // Differential cross section for secondary photons from ICS
-  void ICETable();
   std::vector<std::vector<double>> spec;
-  std::vector<std::vector<double>> spec_AIC;
   std::vector<std::vector<std::vector<double>>> table;
 
-  void ComptonLosstime(const double mue, const double density,
-                       const std::vector<double> &photon_energy,
-                       std::vector<double> &photon_losstime);
-  double Compattenuation(double energy);
-  double ComptonEffCrossSection(double energy);
   void Test();
 
 private:

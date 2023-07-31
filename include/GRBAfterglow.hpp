@@ -59,6 +59,7 @@ public:
   GRBAfterglow(Source &s);
 
   void help();
+  void Init();
   void setGRBAfterglowParam(std::vector<double> _param);
 
   void setOutputFolder(std::string _output_folder);

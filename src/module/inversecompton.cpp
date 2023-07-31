@@ -110,64 +110,6 @@ void InverseCompton::Spec(const std::vector<double> &primary_energy,
   Spec(primary_energy, secondary_energy, target_energy, target_spectrum, table, spec);
 }
 
-void InverseCompton::SpecElectron(const std::vector<double> &primary_energy,
-                                  const std::vector<double> &secondary_energy,
-                                  const std::vector<double> &target_energy,
-                                  const std::vector<double> &target_spectrum) {
-  ICETable();
-  int num_s = secondary_energy.size();
-  int num_p = primary_energy.size();
-  int num_t = target_energy.size();
-  spec.resize(num_s);
-  for (size_t i = 0; i < num_s; i++) {
-    spec[i].assign(num_p, 0.0);
-  }
-  std::vector<double> target_temp(num_t, 0.0);
-  double dum;
-  for (size_t i = 0; i < num_s; i++) {
-    for (size_t j = 0; j < num_p; j++) {
-      for (size_t k = 0; k < num_t; k++) {
-        target_temp[k] = target_spectrum[k] * table[i][j][k];
-      }
-      spec[i][j] = u.Integrate(target_energy, target_temp);
-    }
-  }
-}
-
-void InverseCompton::ICETable() {
-  int num_e = s.electron.momentum.size();
-  int num_t = s.target.momentum.size();
-
-  table.resize(num_e);
-  for (size_t i = 0; i < num_e; i++) {
-    table[i].resize(num_e);
-    for (size_t j = 0; j < num_e; j++) {
-      table[i][j].resize(num_t, 0.);
-    }
-  }
-
-  double dum;
-  double C = (3.0 / 8.0) * T_c_cnst;
-  double s_CM, beta, r;
-  for (size_t i = 0; i < num_e; i++) {
-    for (size_t j = 0; j < num_e; j++) {
-      for (size_t k = 0; k < num_t; k++) {
-        s_CM = e_mass * e_mass + 2.0 * s.electron.energy[j] * s.target.energy[k];
-        beta = (s_CM - e_mass * e_mass) / (s_CM + e_mass * e_mass);
-        r = s.electron.energy[j] / s.electron.energy[i];
-        if ((r >= 1) && (r <= (1 + beta) / (1 - beta))) {
-          dum = 1 / s.electron.energy[j] * (1 + beta) / beta *
-                (1. / r + r + 2 * (1 - beta) / beta * (1 - r) +
-                 (1 - beta) * (1 - beta) / beta / beta * (1 - r) * (1 - r));
-          table[i][j][k] = C * e_mass * e_mass / s_CM * dum;
-        } else {
-          table[i][j][k] = 0.0;
-        }
-      }
-    }
-  }
-}
-
 void InverseCompton::Emissivity(const std::vector<std::vector<double>> &spec,
                                 const std::vector<double> &primary_momentum,
                                 const std::vector<double> &primary_spectrum,
@@ -373,38 +315,6 @@ void InverseCompton::setAngular() {
     angular[i] = -1. + 2. * i / (angular_num - 1.);
     angular_bin[i] = 2. / (angular_num - 1);
   }
-}
-
-void InverseCompton::ComptonLosstime(const double mue, const double density,
-                                     const std::vector<double> &photon_energy,
-                                     std::vector<double> &photon_losstime) {
-  // used in Murase et al. 2015
-  int num_p = photon_energy.size();
-  photon_losstime.resize(num_p);
-  for (size_t i = 0; i < num_p; i++) {
-    photon_losstime[i] = ComptonEffCrossSection(photon_energy[i]) * density * c_cnst / mue;
-  }
-}
-
-double InverseCompton::ComptonEffCrossSection(double energy) {
-  // see Eq.46 of Murase et al. 2015, ApJ
-  double NucleusCharge = 1;
-  double k = energy / e_mass;
-  if (k > 1e-2) {
-    return 2. * PI * NucleusCharge * electron_radius * electron_radius *
-           (2. * (1 + k) * (1 + k) / k / k / (1 + 2. * k) -
-            ((1 + 3 * k) / (1 + 2 * k) / (1 + 2 * k) +
-             (1 + k) * (2 * k * k - 2 * k - 1) / k / k / (1 + 2 * k) / (1 + 2 * k) +
-             4. * k * k / 3. / (1 + 2 * k) / (1 + 2 * k) / (1 + 2 * k) +
-             ((1 + k) / k / k / k + 0.5 / k / k / k - 0.5 / k) * log(1 + 2 * k)));
-  } else {
-    return 2. * PI * NucleusCharge * electron_radius * electron_radius * (4. / 3) * k;
-  }
-}
-
-double InverseCompton::Compattenuation(double energy) {
-    //return (6.022*1e23*pMass/NucleusMass)*ComptonEffCrossSection(a); //cm^2/g screen region
-    return (6.022*1e23)*ComptonEffCrossSection(energy); //cm^2/g screen region
 }
 
 void InverseCompton::Test() { std::cout << "Test : InverseCompton module         " << std::endl; }

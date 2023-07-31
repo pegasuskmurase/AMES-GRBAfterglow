@@ -140,37 +140,6 @@ void Synchrotron::Spec(const double mag_strength, const double primary_charge,
   }
 }
 
-void Synchrotron::SpecProton(const double mag_strength, const std::vector<double> &primary_energy,
-                             const std::vector<double> &secondary_energy) {
-  double coeff_critical_energy =
-      1.5 * hbar_cnst * e_charge * c_cnst / (proton_mass * e_cnst * e_cnst) * mag_strength;
-  double coeff_emissivity = 1.81 * sqrt(3.0) * e_charge * e_charge * e_charge /
-                            (hbar_cnst * 2.0 * PI * proton_mass * e_cnst) * mag_strength;
-  double critical_energy;
-  double gamma, gamma2beta2, x;
-  int num_s = secondary_energy.size();
-  int num_p = primary_energy.size();
-  spec.resize(num_s);
-  for (size_t i = 0; i < num_s; i++) {
-    spec[i].resize(num_p);
-  }
-  for (size_t i = 0; i < num_s; i++) {
-    for (size_t j = 0; j < num_p; j++) {
-      gamma = primary_energy[j] / proton_mass;
-      gamma2beta2 = gamma * gamma - 1.0;
-      if ((secondary_energy[i] < primary_energy[j]) && (gamma > 2.0)) {
-        critical_energy = coeff_critical_energy * gamma2beta2;
-        x = secondary_energy[i] / critical_energy;
-        spec[i][j] = coeff_emissivity * exp(-x) /
-                     sqrt(exp((2.0 / 3.0) * log(1.0 / x)) + (3.62 / PI) * (3.62 / PI)) /
-                     secondary_energy[i];
-      } else {
-        spec[i][j] = 0.0;
-      }
-    }
-  }
-}
-
 void Synchrotron::Emissivity(const std::vector<std::vector<double>> &spec,
                              const std::vector<double> &primary_momentum,
                              const std::vector<double> &primary_spectrum,
@@ -202,11 +171,6 @@ void Synchrotron::Emissivity(double mag_strength,
                              std::vector<double> &photon_spectrum) {
   Spec(mag_strength, s.electron.energy, photon_energy);
   Emissivity(spec, s.electron.momentum, s.electron.spectrum, photon_energy, photon_spectrum);
-}
-
-void Synchrotron::EmissivityProton(double mag_strength) {
-  SpecProton(mag_strength, s.proton.energy, s.photon.energy);
-  Emissivity(spec, s.proton.momentum, s.proton.spectrum, s.photon.energy, s.photon.spectrum);
 }
 
 void Synchrotron::Attenuation(const std::vector<double> &photon_energy,

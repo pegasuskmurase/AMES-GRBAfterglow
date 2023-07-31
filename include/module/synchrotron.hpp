@@ -49,9 +49,6 @@ public:
             const std::vector<double> &primary_energy, const std::vector<double> &secondary_energy,
             std::vector<std::vector<double>> &spec);
 
-  void SpecProton(const double mag_strength, const std::vector<double> &primary_energy,
-                  const std::vector<double> &secondary_energy);
-
   void SSAOpticalDepth(const double mag_strength, const double emission_size);
   void SSAAbsorptionCoeff(const double mag_strength, std::vector<double> &photon_syn_absorption_SSA);
   void Attenuation(const std::vector<double> &photon_energy, std::vector<double> &photon_spectrum);
