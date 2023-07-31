@@ -1,12 +1,11 @@
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib import cm
 import os
 import AMES
-import afterglowpy as grbpy
 
 s = AMES.Source()
 grb = AMES.GRBAfterglow(s)
-
 
 class GRB:
     def __init__(self):
@@ -34,60 +33,44 @@ class GRB:
                  p['epsilon_e'], p['fraction_e'], p['eta_acc_e'], p['epsilon_B'], p['open_angle'], p['view_angle'], p['gaussian_cone'], p['jet_index']]
         grb.setGRBAfterglowParam(param)
 
-        t_min = np.log10(1e4)
+        t_min = np.log10(1e1)
         t_max = np.log10(1e5)
-        self.time_array = np.logspace(t_min, t_max, 1)
+        self.time_array = np.logspace(t_min, t_max, 20)
         self.energy_array_min = [1e9 / AMES.eV2Hz, 1e3, 1e11]
         self.energy_array_max = [1e9 / AMES.eV2Hz, 1e3, 1e11]
 
-        grb.setOutputFolder("result")
+        folder = "result"
+        grb.setOutputFolder(folder)
+        if not os.path.exists(folder):
+            try:
+                os.makedirs(folder, 0o700)
+            except OSError as e:
+                if e.errno != errno.EEXIST:
+                    raise
 
     def calc_flux(self):
+        #Multi-zone calculation
         grb.haveAttenuSSA(True)
         grb.haveEdgeEffect(False)
-        grb.haveSSCSpec(True)
+        grb.haveSSCSpec(False)
         grb.haveAttenuGGSource(True)
         grb.haveOneZone(False)
         grb.Flux(self.time_array, self.energy_array_min, self.energy_array_max)
-        grb.setOutputFolder("result-onezone")
+
+        #One-zone calculation
         grb.haveOneZone(True)
+        folder = "result-onezone"
+        grb.setOutputFolder(folder)
+        if not os.path.exists(folder):
+            try:
+                os.makedirs(folder, 0o700)
+            except OSError as e:
+                if e.errno != errno.EEXIST:
+                    raise
         grb.Flux(self.time_array, self.energy_array_min, self.energy_array_max)
 
-    def spectrum_GS02(self, ax, time_obs):
-        from GRB_GS02 import GS02
-        g = GS02(self.p['E_ej'], self.p['n_ex'], self.p['epsilon_e'],
-                 self.p['epsilon_B'], self.p['spectral_e'], self.p['dl'], self.p['z'])
-        tdays = time_obs / 3600 / 24.
-        energy = np.array(s.getPhoton().getEnergy())
-        nu = energy * AMES.eV2Hz
-        spectrum = g.gen_spectrum(nu, tdays)*1e-3/AMES.erg2Jy*nu
-        ax.plot(energy, spectrum, '-.', c='C8', lw=3., label='Granot & Sari, 2002')
-
-    def spectrum_afterglowpy(self, ax, time_obs):
-        # For convenience, place arguments into a dict.
-        Z = {'jetType':     grbpy.jet.TopHat,     # Top-Hat jet
-             'specType':    0,                  # Basic Synchrotron Emission Spectrum
-             'thetaObs':    self.p['view_angle'],   # Viewing angle in radians
-             'E0':          self.p['E_ej'],  # Isotropic-equivalent energy in erg
-             'thetaCore':   self.p['open_angle'],    # Half-opening angle in radians
-             'n0':          self.p['n_ex'],    # circumburst density in cm^{-3}
-             'p':           self.p['spectral_e'],    # electron energy distribution index
-             'epsilon_e':   self.p['epsilon_e'],    # epsilon_e
-             'epsilon_B':   self.p['epsilon_B'],   # epsilon_B
-             'xi_N':        self.p['fraction_e'],    # Fraction of electrons accelerated
-             'd_L':         self.p['dl'],  # Luminosity distance in cm
-             'z':           self.p['z']}   # redshift
-        # Space time points geometrically, from 10^3 s to 10^7 s
-        # Calculate flux in a single X-ray band (all times have same frequency)
-        energy = np.array(s.getPhoton().getEnergy())
-        nu = energy * AMES.eV2Hz
-        Fnu = grbpy.fluxDensity(time_obs, nu, **Z)
-        spectrum = Fnu * 1e-3/AMES.erg2Jy*nu
-        ax.plot(energy, spectrum, '-.', c='C5', lw=2., label='Afterglowpy')
-
     def plot_spectrum(self):
-        colors = ['C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'r', 'g', 'b', 'c', 'y', 'C0', 'C1', 'C2', 'C3', 'C4', 'C5',
-                  'C6', 'C7', 'C8', 'C9', 'r', 'g', 'b', 'c', 'y', 'C0', 'C1', 'C2', 'C3', 'C4', 'C5', 'C6', 'C7', 'C8', 'C9', 'r', 'g', 'b', 'c', 'y']
+        colors = [cm.YlOrBr(x) for x in cm_subsection]
         fig, ax = plt.subplots()
         data = np.loadtxt('result-onezone/spectrum.dat')
         num = len(s.getPhoton().getMomentum())
@@ -137,6 +120,6 @@ class GRB:
 
 
 g = GRB()
-g.calc_flux()
+#g.calc_flux()
 g.plot_spectrum()
 #g.plot_flux()
