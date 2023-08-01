@@ -50,8 +50,6 @@ struct GRBAfterglowParam {
                      // into the magnetic energy
   double open_angle; // the openning angle of the outflow [radian]
   double view_angle; // the view angle [radian]
-  double gaussian_cone;
-  double jet_index;
 };
 
 class GRBAfterglow {

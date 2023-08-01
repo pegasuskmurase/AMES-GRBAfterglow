@@ -32,21 +32,6 @@ void GRBAfterglow::help() {
                "Murase<murase@psu.edu>."
             << std::endl;
   std::cout << "***The simpliest way to use the code***" << std::endl;
-  /*
-  std::cout << "1, Calculate spectrum at given observation time" << std::endl;
-  std::cout << "    See test/GRBAfterglow_spectrum() in "
-               "test/GRBAfterglow.py"
-            << std::endl;
-  std::cout << "2, Calculate lightcure at given "
-               "observation time array and "
-               "energy array"
-            << std::endl;
-  std::cout << "    See test/GRBAfterglow_lightcurve() in "
-               "test/GRBAfterglow.py"
-            << std::endl;
-  std::cout << "***Run the code with more details***" << std::endl;
-  std::cout << "    See test/GRBAfterglow_user.py" << std::endl;
-  */
 }
 
 void GRBAfterglow::Init() {
@@ -87,9 +72,7 @@ void GRBAfterglow::setGRBAfterglowParam(std::vector<double> _param) {
   param.eta_acc_e = _param[9];
   param.epsilon_B = _param[10];
   param.open_angle = _param[11];
-  param.view_angle = _param[12];
-  param.gaussian_cone = _param[13];
-  param.jet_index = _param[14];
+  param.view_angle = 0;
 }
 
 void GRBAfterglow::setOutputFolder(std::string _output_folder) { output_folder = _output_folder; }
@@ -341,13 +324,10 @@ void GRBAfterglow::Spectrum(ElectronDistribution &ED, Synchrotron &syn, InverseC
             }
           }
         }
-
       } else {
-        for (size_t j = 0; j < jet.phi.size(); j++) {
-        }
+        std::cout << "Warning: The current version is only for on-axis jet " << std::endl;
       }
     }
-
   }
 }
 
@@ -450,29 +430,13 @@ void GRBAfterglow::EvolutionThinShell(Jet &jet, double T) {
   double C_BM76 = epsilon + (9.0 - 2.0 * param.k_ex) / (17.0 - 4.0 * param.k_ex) *
                                 (1.0 - epsilon); // correction factor
   double E_ej, M_ej, Gamma, beta;
+  E_ej = param.E_ej * (2 * PI * (1 - cos(param.open_angle)) / (4.0 * PI));
+  Gamma = param.Gamma0;
+  M_ej = E_ej / (Gamma * c_cnst * c_cnst);
+  beta = sqrt(1 - 1. / Gamma / Gamma);
 
   // Initial values
   for (size_t i = 0; i < jet.theta.size(); i++) {
-    if ((param.gaussian_cone > 0) && (param.jet_index > 0)) {
-      E_ej = param.E_ej *
-             pow(1 + jet.theta[i] / param.gaussian_cone * jet.theta[i] / param.gaussian_cone,
-                 -param.jet_index / 2) *
-             (2 * PI * (1 - cos(param.open_angle)) / (4 * PI));
-      Gamma = param.Gamma0 *
-              pow(1 + jet.theta[i] / param.gaussian_cone * jet.theta[i] / param.gaussian_cone,
-                  -param.jet_index / 2);
-    } else if ((param.gaussian_cone > 0) && (param.jet_index <= 0)) {
-      E_ej = param.E_ej *
-             exp(-0.5 * jet.theta[i] * jet.theta[i] / param.gaussian_cone / param.gaussian_cone) *
-             (2 * PI * (1 - cos(param.open_angle)) / (4 * PI));
-      Gamma = param.Gamma0;
-    } else {
-      E_ej = param.E_ej * (2 * PI * (1 - cos(param.open_angle)) / (4.0 * PI));
-      Gamma = param.Gamma0;
-    }
-    M_ej = E_ej / (Gamma * c_cnst * c_cnst);
-    beta = sqrt(1 - 1. / Gamma / Gamma);
-
     jet.Gamma0[i] = Gamma;
     jet.M_ej[i] = M_ej;
     jet.E_ej[i] = E_ej;
@@ -504,18 +468,18 @@ void GRBAfterglow::EvolutionThinShell(Jet &jet, double T) {
 
 // dynamics with FS
 DynamicThinShell::DynamicThinShell(const double M_ej, const double n_ex, const double k_ex,
-                                 const double epsilon)
+                                   const double epsilon)
     : M_ej(M_ej), n_ex(n_ex), k_ex(k_ex), epsilon(epsilon) {}
 
 void DynamicThinShell::operator()(const double x, std::vector<double> &y,
-                                 std::vector<double> &dydx) {
+                                  std::vector<double> &dydx) {
   beta = sqrt(1 - 1. / y[2] / y[2]);
   gamma_hat = (4. + 1. / y[2]) / 3.;
   Gamma_eff = (gamma_hat * y[2] * y[2] - gamma_hat + 1) / y[2];
   dGamma_eff = (gamma_hat * y[2] * y[2] + gamma_hat - 1) / (y[2] * y[2]);
   A = 2. * PI * (1 - cos(y[3])) * y[0] * y[0] * mp * n_ex * pow(y[0], -k_ex);
-  //double cs = sqrt(gamma_hat * (gamma_hat - 1) * (y[2] - 1) / (1 + gamma_hat * (y[2] - 1)) *
-  //                 c_cnst * c_cnst);
+  // double cs = sqrt(gamma_hat * (gamma_hat - 1) * (y[2] - 1) / (1 + gamma_hat * (y[2] - 1)) *
+  //                  c_cnst * c_cnst);
 
   // dr/dt
   dydx[0] = beta * c_cnst;
@@ -538,7 +502,7 @@ void DynamicThinShell::operator()(const double x, std::vector<double> &y,
       dydx[0];
 
   // dtheta/ dt
-  //dydx[3] = cs / c_cnst / y[0] / y[2] * dydx[0];
+  // dydx[3] = cs / c_cnst / y[0] / y[2] * dydx[0];
   dydx[3] = 0.0;
 
   dydx[5] = 1.0 / c_cnst / beta / y[2] * dydx[0]; // comving dynamical timescale

@@ -23,19 +23,16 @@ class GRB:
             'eta_acc_e':          1,  #
             'epsilon_B':          0.0006,
             'open_angle':          0.1,  #
-            'view_angle':          0.,  #
-            'gaussian_cone':         0.,
-            'jet_index':         0.,
         }
 
         self.p = p
         param = [p['z'], p['dl'], p['E_ej'], p['Gamma0'], p['n_ex'], p['k_ex'], p['spectral_e'],
-                 p['epsilon_e'], p['fraction_e'], p['eta_acc_e'], p['epsilon_B'], p['open_angle'], p['view_angle'], p['gaussian_cone'], p['jet_index']]
+                 p['epsilon_e'], p['fraction_e'], p['eta_acc_e'], p['epsilon_B'], p['open_angle']]
         grb.setGRBAfterglowParam(param)
 
-        t_min = np.log10(1e1)
+        t_min = np.log10(1e4)
         t_max = np.log10(1e5)
-        self.time_array = np.logspace(t_min, t_max, 20)
+        self.time_array = np.logspace(t_min, t_max, 2)
         self.energy_array_min = [1e9 / AMES.eV2Hz, 1e3, 1e11]
         self.energy_array_max = [1e9 / AMES.eV2Hz, 1e3, 1e11]
 
