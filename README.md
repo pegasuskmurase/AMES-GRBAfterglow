@@ -6,7 +6,7 @@ Dr. Bing Theodore Zhang,
 et al
 
 ## Build
-Installation without python virtual environment.
+The current version not support intallation within python virtual environment.
 
 Check cmake and swig:
 
@@ -25,6 +25,6 @@ If cmake and make is successful, a python file AMES.py will be generated.
 ```
 import AMES
 
-Follow the examples in the test folder.
+Follow the examples in the main folder.
 
 ```

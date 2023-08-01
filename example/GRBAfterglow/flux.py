@@ -52,7 +52,7 @@ class GRB:
         #Multi-zone calculation
         grb.haveAttenuSSA(True)
         grb.haveEdgeEffect(False)
-        grb.haveSSCSpec(False)
+        grb.haveSSCSpec(True)
         grb.haveAttenuGGSource(True)
         grb.haveOneZone(False)
         grb.Flux(self.time_array, self.energy_array_min, self.energy_array_max)
@@ -89,10 +89,6 @@ class GRB:
             ax.plot(data[idx1:idx2, 0], data[idx1:idx2, 1], '-', c=colors[i], lw=2, label=str(x) + ' s, EATS')
             ax.plot(data[idx1:idx2, 0], data[idx1:idx2, 2], '-', c=colors[i], lw=2)
 
-        for i, x in enumerate(self.time_array):
-            self.spectrum_GS02(ax, self.time_array[i])
-            self.spectrum_afterglowpy(ax, self.time_array[i])
-
         ax.set_xscale('log')
         ax.set_yscale('log')
         ax.set_xlim([1e-8, 1e15])
@@ -121,6 +117,6 @@ class GRB:
 
 
 g = GRB()
-#g.calc_flux()
+g.calc_flux()
 g.plot_spectrum()
-#g.plot_flux()
+g.plot_flux()

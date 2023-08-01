@@ -18,7 +18,7 @@
 #include "module/synchrotron.hpp"
 
 struct Jet {
-  int angular_num = 30;
+  int angular_num = 15;
   int phi_num = 2;
   std::vector<double> theta;
   std::vector<double> theta_bin;

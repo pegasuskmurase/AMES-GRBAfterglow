@@ -453,7 +453,6 @@ void GRBAfterglow::EvolutionThinShell(Jet &jet, double T) {
 
   // Initial values
   for (size_t i = 0; i < jet.theta.size(); i++) {
-    // structured jet
     if ((param.gaussian_cone > 0) && (param.jet_index > 0)) {
       E_ej = param.E_ej *
              pow(1 + jet.theta[i] / param.gaussian_cone * jet.theta[i] / param.gaussian_cone,
