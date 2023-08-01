@@ -18,7 +18,6 @@ mkdir build && cd build
 cmake ..
 make
 ```
-## Set python file path
 If cmake and make is successful, a python file AMES.py will be generated.
 
 ## Run
