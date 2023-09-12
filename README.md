@@ -1,9 +1,12 @@
-# AMES
+# AMES (Astrophysical Multimessenger Emission Simulator)
 This code is developed by
 
-Prof. Kohta Murase,
+Dr. Kohta Murase,
 Dr. Bing Theodore Zhang,
 et al
+
+Citations:
+Zhang, Murase, Veres & Meszaros, Astrophys.J. 920 (2021) 55
 
 ## Build
 The current version not support intallation within python virtual environment.
