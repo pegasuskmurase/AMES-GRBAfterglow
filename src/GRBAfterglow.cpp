@@ -314,16 +314,6 @@ void GRBAfterglow::Spectrum(ElectronDistribution &ED, Synchrotron &syn, InverseC
           photon_ssc[k] += EATS_factor * photon_energy[k] * eV2erg * photon_ssc_obs[k];
         }
 
-        if (have_edge_effect) {
-          if (1. / jet.Gamma[i][j] > param.open_angle) {
-            for (size_t k = 0; k < num_p; k++) {
-              photon_syn[k] *=
-                  param.open_angle * param.open_angle * jet.Gamma[i][j] * jet.Gamma[i][j];
-              photon_ssc[k] *=
-                  param.open_angle * param.open_angle * jet.Gamma[i][j] * jet.Gamma[i][j];
-            }
-          }
-        }
       } else {
         std::cout << "Warning: The current version is only for on-axis jet " << std::endl;
       }
