@@ -153,6 +153,8 @@ void GRBAfterglow::Flux(const std::vector<double> &time_array,
 
 void GRBAfterglow::Spectrum(ElectronDistribution &ED, Synchrotron &syn, InverseCompton &IC,
                             GammaGamma &gg, double T) {
+
+  double shell_thickness_factor = 4. * (3. - param.k_ex);
   double syn_dum, ssc_dum;
   if (have_onezone) {
     double Gamma, radius;
@@ -160,7 +162,7 @@ void GRBAfterglow::Spectrum(ElectronDistribution &ED, Synchrotron &syn, InverseC
     double beta = sqrt(1. - 1. / Gamma / Gamma);
     double dynamical_timescale = Gamma * T / (1 + param.z);
     double adiabatic_timescale = dynamical_timescale;
-    double Delta = radius / 12. / Gamma; // comoving frame
+    double Delta = radius / shell_thickness_factor / Gamma; // comoving frame
     double photon_escape_timescale = Delta / c_cnst;
 
     double mag_strength = sqrt(32 * PI * mp * c_cnst * c_cnst * param.epsilon_B *
@@ -221,9 +223,9 @@ void GRBAfterglow::Spectrum(ElectronDistribution &ED, Synchrotron &syn, InverseC
         double beta = sqrt(1. - 1. / (jet.Gamma[i][j] * jet.Gamma[i][j]));
         double beta_sh = sqrt(1. - 1. / 2 / (jet.Gamma[i][j] * jet.Gamma[i][j]));
         double doppler_factor = 1. / jet.Gamma[i][j] / (1 - beta * jet.mu[i][j]);
-        double delta_sh = jet.radius[i][j] / 12. / (1 - beta_sh * jet.mu[i][j]);
-        double delta_s = jet.radius[i][j] / 12. / jet.Gamma[i][j] / jet.Gamma[i][j] /
-                         abs(jet.mu[i][j] - beta_sh);
+        double delta_sh = jet.radius[i][j] / shell_thickness_factor / (1 - beta_sh * jet.mu[i][j]);
+        double delta_s = jet.radius[i][j] / shell_thickness_factor / jet.Gamma[i][j] /
+                         jet.Gamma[i][j] / abs(jet.mu[i][j] - beta_sh);
 
         double EATS_factor = 2 * PI * jet.theta_bin[i] * sin(jet.theta[i]) * jet.radius[i][j] *
                              jet.radius[i][j] * abs(jet.mu[i][j] - beta_sh) /
@@ -234,7 +236,8 @@ void GRBAfterglow::Spectrum(ElectronDistribution &ED, Synchrotron &syn, InverseC
                  ExternalDensity(jet.radius[i][j]) * jet.Gamma[i][j] * (jet.Gamma[i][j] - 1));
         s.getParam().setMagStrength(mag_strength);
 
-        double photon_escape_timescale = jet.radius[i][j] / 12. / jet.Gamma[i][j] / c_cnst * 2;
+        double photon_escape_timescale =
+            jet.radius[i][j] / shell_thickness_factor / jet.Gamma[i][j] / c_cnst * 2;
         double electron_inj = (4. * jet.Gamma[i][j]) * param.fraction_e *
                               ExternalDensity(jet.radius[i][j]) / jet.dynamical_timescale[i][j];
         s.getElectron().setSpectrumPL(MomentumInj(jet.Gamma[i][j]),
