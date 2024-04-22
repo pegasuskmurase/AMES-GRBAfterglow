@@ -58,52 +58,28 @@ class GRB:
         grb.haveSSCSpec(True)
         grb.haveAttenuGGSource(True)
         grb.haveOneZone(False)
-        grb.Flux(ED, syn, IC, gg, ph, self.time_array, self.energy_array_min, self.energy_array_max)
-
-        #One-zone calculation
-        grb.haveOneZone(True)
-        folder = "result-onezone"
-        grb.setOutputFolder(folder)
-        if not os.path.exists(folder):
-            try:
-                os.makedirs(folder, 0o700)
-            except OSError as e:
-                if e.errno != errno.EEXIST:
-                    raise
-        grb.Flux(ED, syn, IC, gg, ph, self.time_array, self.energy_array_min, self.energy_array_max)
-
-    def plot_spectrum(self):
-        cm_subsection = np.linspace(0.2, 1, len(self.time_array))
-        colors = [cm.YlOrBr(x) for x in cm_subsection]
-        fig, ax = plt.subplots()
-        data = np.loadtxt('result-onezone/spectrum.dat')
-        num = len(s.getPhoton().getMomentum())
-        for i, x in enumerate(self.time_array):
-            idx1 = num * i
-            idx2 = num * (i + 1)
-            ax.plot(data[idx1:idx2, 0], data[idx1:idx2, 1], '--', c=colors[i], lw=2, label=str(x) + ' s, Onezone')
-            ax.plot(data[idx1:idx2, 0], data[idx1:idx2, 2], '--', c=colors[i], lw=2, label=str(x) + ' s')
-
-        data = np.loadtxt('result/spectrum.dat')
-        num = len(s.getPhoton().getMomentum())
-        for i, x in enumerate(self.time_array):
-            idx1 = num * i
-            idx2 = num * (i + 1)
-            ax.plot(data[idx1:idx2, 0], data[idx1:idx2, 1], '-', c=colors[i], lw=2, label=str(x) + ' s, EATS')
-            ax.plot(data[idx1:idx2, 0], data[idx1:idx2, 2], '-', c=colors[i], lw=2)
-
-        ax.set_xscale('log')
-        ax.set_yscale('log')
-        ax.set_xlim([1e-8, 1e15])
-        ax.set_ylim([1e-18, 1e-3])
-        ax.set_xlabel('E [eV]', fontsize=15)
-        ax.set_ylabel(r'Flux $[\rm erg \ cm^{-2} \ s^{-1}]$', fontsize=15)
-        # ax.legend(fontsize=7)
-        plt.show()
+        self.flux_vector = AMES.VecVecdouble()
+        grb.Flux(self.flux_vector, ED, syn, IC, gg, ph, self.time_array, self.energy_array_min, self.energy_array_max)
 
     def plot_flux(self):
         fig, ax = plt.subplots()
 
+        dum = []
+        for i in range(len(self.flux_vector)):
+            dum.append(self.flux_vector[i][0])
+        ax.plot(self.time_array, dum, 'C0--', lw=2)
+
+        dum = []
+        for i in range(len(self.flux_vector)):
+            dum.append(self.flux_vector[i][1])
+        ax.plot(self.time_array, dum, 'C1--', lw=2)
+
+        dum = []
+        for i in range(len(self.flux_vector)):
+            dum.append(self.flux_vector[i][2])
+        ax.plot(self.time_array, dum, 'C2--', lw=2)
+
+        #comparison
         data = np.loadtxt('result/flux.dat')
         ax.plot(data[:, 0], data[:, 1], 'C0-')
         ax.plot(data[:, 0], data[:, 2], 'C1-')
@@ -111,7 +87,7 @@ class GRB:
 
         ax.set_xscale('log')
         ax.set_yscale('log')
-        ax.set_xlim([1, 1e4])
+        ax.set_xlim([1e2, 1e4])
         ax.set_ylim([1e-19, 1e-4])
         ax.set_xlabel('T [s]', fontsize=15)
         ax.set_ylabel(r'Flux $[\rm erg \ cm^{-2} \ s^{-1}]$', fontsize=15)
@@ -121,5 +97,4 @@ class GRB:
 
 g = GRB()
 g.calc_flux()
-g.plot_spectrum()
 g.plot_flux()

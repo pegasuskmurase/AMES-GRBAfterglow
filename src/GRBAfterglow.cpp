@@ -8,7 +8,6 @@
 // \brief Calculate emissions GRB afterglow
 
 #include "GRBAfterglow.hpp"
-#include "module/photonbackground.hpp"
 #include "module/rk5.hpp"
 
 #include <fstream>
@@ -89,17 +88,57 @@ void GRBAfterglow::haveAttenuGGCosmic(bool _have_attenu_GG_cosmic) {
   have_attenu_GG_cosmic = _have_attenu_GG_cosmic;
 }
 
-void GRBAfterglow::Flux(const std::vector<double> &time_array,
+void GRBAfterglow::Flux(std::vector<std::vector<double>> &flux_vector,
+                              ElectronDistribution &ED, Synchrotron &syn, InverseCompton &IC,
+                              GammaGamma &gg, Photonbackground &ph,
+                              const std::vector<double> &time_array,
+                              const std::vector<double> &energy_array_min,
+                              const std::vector<double> &energy_array_max) {
+
+  Init(); 
+
+  if (have_onezone) {
+  } else {
+    InitJet(jet);
+  }
+
+  flux_vector.resize(time_array.size());
+  for (size_t i = 0; i < time_array.size(); i++) {
+    flux_vector[i].assign(energy_array_min.size(), 0.0);
+  }
+
+  int idx = 0;
+  for (auto t : time_array) {
+    std::cout << " t " << t << std::endl;
+
+    Spectrum(ED, syn, IC, gg, t);
+
+    for (size_t i = 0; i < num_p; i++) {
+      photon_tot[i] = photon_syn[i] + photon_ssc[i];
+      photon_tot_diff[i] = photon_tot[i] / photon_energy[i];
+    }
+
+    double dum;
+    for (size_t i = 0; i < energy_array_min.size(); i++) {
+      if (fabs(energy_array_min[i] - energy_array_max[i]) < 1e-5) {
+        dum = utility.Interpolate(photon_energy, photon_tot, energy_array_min[i]);
+      } else {
+        dum = utility.Integrate(photon_energy, photon_tot_diff, energy_array_min[i],
+                                energy_array_max[i]);
+      }
+      flux_vector[idx][i] = dum;
+    }
+
+    idx++;
+  }
+}
+
+void GRBAfterglow::Flux(ElectronDistribution &ED, Synchrotron &syn, InverseCompton &IC,
+                        GammaGamma &gg, Photonbackground &ph, const std::vector<double> &time_array,
                         const std::vector<double> &energy_array_min,
                         const std::vector<double> &energy_array_max) {
 
-  Init();
-
-  ElectronDistribution ED(s);
-  Synchrotron syn(s);
-  InverseCompton IC(s);
-  GammaGamma gg(s);
-  Photonbackground ph(s);
+  Init(); 
 
   if (have_onezone) {
   } else {

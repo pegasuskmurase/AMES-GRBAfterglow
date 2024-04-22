@@ -349,8 +349,16 @@ public:
   void haveAttenuGGSource(bool _have_attenu_GG_source); // gamma-gamma attenuation inside sources
   void haveAttenuGGCosmic(
       bool _have_attenu_GG_cosmic); // gamma-gamma attenuation in the intergalactic space
-  void Flux(const std::vector<double> &time_array, const std::vector<double> &energy_array_min,
+
+  void Flux(ElectronDistribution &ED, Synchrotron &syn, InverseCompton &IC, GammaGamma &gg, Photonbackground &ph, const std::vector<double> &time_array,
+            const std::vector<double> &energy_array_min,
             const std::vector<double> &energy_array_max);
+
+  void Flux(std::vector<std::vector<double>> &flux_vector, ElectronDistribution &ED,
+                  Synchrotron &syn, InverseCompton &IC, GammaGamma &gg, Photonbackground &ph,
+                  const std::vector<double> &time_array,
+                  const std::vector<double> &energy_array_min,
+                  const std::vector<double> &energy_array_max);
 };
 
 
