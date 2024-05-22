@@ -196,6 +196,7 @@ void GRBAfterglow::Spectrum(ElectronDistribution &ED, Synchrotron &syn, InverseC
 
   double shell_thickness_factor = 4. * (3. - param.k_ex);
   double syn_dum, ssc_dum;
+  double att;
   if (have_onezone) {
     double Gamma, radius;
     EvolutionThinShellAnalytic(T, Gamma, radius);
@@ -360,101 +361,102 @@ void GRBAfterglow::Spectrum(ElectronDistribution &ED, Synchrotron &syn, InverseC
       } else {
         std::cout << "Warning: The current version is only for on-axis jet " << std::endl;
         for (size_t j = 0; j < jet.phi.size(); j++) {
-          beta = sqrt(1. - 1. / (jet.Gamma[i][j] * jet.Gamma[i][j]));
-          beta_sh = sqrt(1. - 1. / 2 / (jet.Gamma[i][j] * jet.Gamma[i][j]));
-          doppler_factor = 1. / jet.Gamma[i][j] / (1 - beta * jet.mu[i][j]);
-          delta_s = jet.radius[i][j] / shell_thickness_factor / jet.Gamma[i][j] / jet.Gamma[i][j] /
-                    fabs(jet.mu[i][j] - beta_sh);
+        double beta = sqrt(1. - 1. / (jet.Gamma[i][j] * jet.Gamma[i][j]));
+        double beta_sh = sqrt(1. - 1. / 2 / (jet.Gamma[i][j] * jet.Gamma[i][j]));
+        double doppler_factor = 1. / jet.Gamma[i][j] / (1 - beta * jet.mu[i][j]);
+        double delta_sh = jet.radius[i][j] / shell_thickness_factor / (1 - beta_sh * jet.mu[i][j]);
+        double delta_s = jet.radius[i][j] / shell_thickness_factor / jet.Gamma[i][j] /
+                         jet.Gamma[i][j] / fabs(jet.mu[i][j] - beta_sh);
 
-          EATS_factor = 2 * PI * jet.theta_bin[i] * sin(jet.theta[i]) * jet.radius[i][j] *
-                        jet.radius[i][j] * fabs(jet.mu[i][j] - beta_sh) /
-                        (1 - beta_sh * jet.mu[i][j]) * (1 + param.z) / param.dl / param.dl;
+        double EATS_factor = 2 * PI * jet.theta_bin[i] * sin(jet.theta[i]) * jet.radius[i][j] *
+                             jet.radius[i][j] * fabs(jet.mu[i][j] - beta_sh) /
+                             (1 - beta_sh * jet.mu[i][j]) * (1 + param.z) / param.dl / param.dl;
 
-          mag_strength =
-              sqrt(32 * PI * mp * c_cnst * c_cnst * param.epsilon_B *
-                   ExternalDensity(jet.radius[i][j]) * jet.Gamma[i][j] * (jet.Gamma[i][j] - 1));
-          s.getParam().setMagStrength(mag_strength);
+        double mag_strength =
+            sqrt(32 * PI * mp * c_cnst * c_cnst * param.epsilon_B *
+                 ExternalDensity(jet.radius[i][j]) * jet.Gamma[i][j] * (jet.Gamma[i][j] - 1));
+        s.getParam().setMagStrength(mag_strength);
 
-          photon_escape_timescale =
-              jet.radius[i][j] / shell_thickness_factor / jet.Gamma[i][j] / c_cnst * 2;
-          electron_inj = (4. * jet.Gamma[i][j]) * param.fraction_e *
-                         ExternalDensity(jet.radius[i][j]) / jet.dynamical_timescale[i][j];
-          s.getElectron().setSpectrumPL(MomentumInj(jet.Gamma[i][j]),
-                                        MomentumMax(mag_strength, jet.radius[i][j], beta),
-                                        param.spectral_e, electron_inj, false);
+        double photon_escape_timescale =
+            jet.radius[i][j] / shell_thickness_factor / jet.Gamma[i][j] / c_cnst * 2;
+        double electron_inj = (4. * jet.Gamma[i][j]) * param.fraction_e *
+                              ExternalDensity(jet.radius[i][j]) / jet.dynamical_timescale[i][j];
+        s.getElectron().setSpectrumPL(MomentumInj(jet.Gamma[i][j]),
+                                      MomentumMax(mag_strength, jet.radius[i][j], beta),
+                                      param.spectral_e, electron_inj, false);
 
-          // ELectron cooling without External photons
-          ED.IterationSolution(syn, IC, false, jet.dynamical_timescale[i][j],
-                               jet.adiabatic_timescale[i][j], photon_escape_timescale);
-          target_syn = s.getTarget().getSpectrum();
+        ED.IterationSolution(syn, IC, false, jet.dynamical_timescale[i][j],
+                             jet.adiabatic_timescale[i][j], photon_escape_timescale);
 
-          syn.Emissivity(mag_strength, photon_energy, photon_syn_temp);
+        target_syn = s.getTarget().getSpectrum();
+
+        syn.Emissivity(mag_strength, photon_energy, photon_syn_temp);
+        for (size_t k = 0; k < num_p; k++) {
+          photon_syn_temp[k] *= photon_energy[k];
+        }
+
+        if (have_SSCSpec) {
+          IC.Emissivity(target_energy, target_syn, photon_energy, photon_ssc_temp);
           for (size_t k = 0; k < num_p; k++) {
-            photon_syn_temp[k] *= photon_energy[k];
+            photon_ssc_temp[k] *= photon_energy[k];
           }
+        }
 
-          // SSC process
-          if (have_SSCSpec) {
-            IC.Emissivity(target_energy, target_syn, photon_energy, photon_ssc_temp);
-            for (size_t k = 0; k < num_p; k++) {
-              photon_ssc_temp[k] *= photon_energy[k];
-            }
-          }
+        if (have_attenu_SSA) {
+          syn.SSAAbsorptionCoeff(mag_strength, photon_syn_absorption_SSA);
+        }
 
+        double alpha, tau, att;
+        for (size_t k = 0; k < num_p; k++) {
           if (have_attenu_SSA) {
-            syn.SSAAbsorptionCoeff(mag_strength, photon_syn_absorption_SSA);
-          }
-
-          for (size_t k = 0; k < num_p; k++) {
-            if (have_attenu_SSA) {
-              alpha = utility.Interpolate(photon_energy, photon_syn_absorption_SSA,
-                                          photon_energy[k] * (1 + param.z) / doppler_factor) /
-                      doppler_factor;
-              tau = alpha * delta_s;
-              if (tau > 1e-5) {
-                att = (1. - exp(-tau)) / tau;
-              } else {
-                att = 1. / (1 + tau);
-              }
+            alpha = utility.Interpolate(photon_energy, photon_syn_absorption_SSA,
+                                        photon_energy[k] * (1 + param.z) / doppler_factor) /
+                    doppler_factor;
+            tau = alpha * delta_s;
+            if (tau > 1e-5) {
+              att = (1. - exp(-tau)) / tau;
             } else {
-              att = 1.0;
+              att = 1. / (1 + tau);
             }
-
-            photon_syn_obs[k] =
-                utility.Interpolate(photon_energy, photon_syn_temp,
-                                    photon_energy[k] * (1 + param.z) / doppler_factor) *
-                doppler_factor * doppler_factor / (4 * PI) * att * delta_s;
+          } else {
+            att = 1.0;
           }
 
+          photon_syn_obs[k] =
+              utility.Interpolate(photon_energy, photon_syn_temp,
+                                  photon_energy[k] * (1 + param.z) / doppler_factor) *
+              doppler_factor * doppler_factor / (4 * PI) * att * delta_s;
+        }
+
+        if (have_attenu_GG_source) {
+          gg.Losstime(target_energy, target_syn, photon_energy, photon_losstime);
+        }
+
+        for (size_t k = 0; k < num_p; k++) {
           if (have_attenu_GG_source) {
-            gg.Losstime(target_energy, target_tot, photon_energy, photon_losstime);
-          }
-
-          for (size_t k = 0; k < num_p; k++) {
-            if (have_attenu_GG_source) {
-              alpha = photon_losstime[k] / c_cnst;
-              alpha = utility.Interpolate(photon_energy, photon_losstime,
-                                          photon_energy[k] * (1 + param.z) / doppler_factor) /
-                      doppler_factor / c_cnst;
-              tau = alpha * delta_s;
-              if (tau > 1e-5) {
-                att = (1. - exp(-tau)) / tau;
-              } else {
-                att = 1. / (1 + tau);
-              }
+            alpha = photon_losstime[k] / c_cnst;
+            alpha = utility.Interpolate(photon_energy, photon_losstime,
+                                        photon_energy[k] * (1 + param.z) / doppler_factor) /
+                    doppler_factor / c_cnst;
+            tau = alpha * delta_s;
+            if (tau > 1e-5) {
+              att = (1. - exp(-tau)) / tau;
             } else {
-              att = 1.0;
+              att = 1. / (1 + tau);
             }
-            photon_ssc_obs[k] =
-                utility.Interpolate(photon_energy, photon_ssc_temp,
-                                    photon_energy[k] * (1 + param.z) / doppler_factor) *
-                doppler_factor * doppler_factor / (4 * PI) * att * delta_s;
+          } else {
+            att = 1.0;
           }
+          photon_ssc_obs[k] =
+              utility.Interpolate(photon_energy, photon_ssc_temp,
+                                  photon_energy[k] * (1 + param.z) / doppler_factor) *
+              doppler_factor * doppler_factor / (4 * PI) * att * delta_s;
+        }
 
-          for (size_t k = 0; k < num_p; k++) {
-            photon_syn[k] += EATS_factor * photon_energy[k] * eV2erg * photon_syn_obs[k];
-            photon_ssc[k] += EATS_factor * photon_energy[k] * eV2erg * photon_ssc_obs[k];
-          }
+        for (size_t k = 0; k < num_p; k++) {
+          photon_syn[k] += EATS_factor * photon_energy[k] * eV2erg * photon_syn_obs[k];
+          photon_ssc[k] += EATS_factor * photon_energy[k] * eV2erg * photon_ssc_obs[k];
+        }
         }
       }
     }
