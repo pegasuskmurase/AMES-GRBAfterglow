@@ -400,30 +400,30 @@ void GRBAfterglow::InitJet(Jet &jet) {
   jet.theta.resize(jet.angular_num);
   jet.theta_bin.resize(jet.angular_num);
 
-  /*
-  for (size_t i = 0; i < jet.angular_num; i++) {
-    jet.theta[i] = 0. + param.open_angle * i / (jet.angular_num - 1);
-    jet.theta_bin[i] = param.open_angle / jet.angular_num;
-  }
-  */
+  if (param.view_angle == 0) {
+    for (size_t i = 0; i < jet.angular_num; i++) {
+      jet.theta[i] = 0. + param.open_angle * i / (jet.angular_num - 1);
+      jet.theta_bin[i] = param.open_angle / jet.angular_num;
+    }
+  } else {
+    // Calculate the logarithmic spacing factor
+    double log_factor = (std::log10(theta_max) - std::log10(theta_min)) / (jet.angular_num - 1);
 
-  // Calculate the logarithmic spacing factor
-  double log_factor = (std::log10(theta_max) - std::log10(theta_min)) / (jet.angular_num - 1);
+    // Generate the logarithmically spaced grid
 
-  // Generate the logarithmically spaced grid
-
-  for (int i = 0; i < jet.angular_num; ++i) {
-    jet.theta[i] = std::pow(10, std::log10(theta_min) + i * log_factor);
-  }
-  double theta_l = std::pow(10, std::log10(theta_min) + (-1) * log_factor);
-  double theta_r = std::pow(10, std::log10(theta_min) + jet.angular_num * log_factor);
-  for (int i = 0; i < jet.angular_num; ++i) {
-    if (i == 0) {
-      jet.theta_bin[i] = 0.5 * (jet.theta[i + 1] - theta_l);
-    } else if (i == jet.angular_num - 1) {
-      jet.theta_bin[i] = 0.5 * (theta_r - jet.theta[i - 1]);
-    } else {
-      jet.theta_bin[i] = 0.5 * (jet.theta[i + 1] - jet.theta[i - 1]);
+    for (int i = 0; i < jet.angular_num; ++i) {
+      jet.theta[i] = std::pow(10, std::log10(theta_min) + i * log_factor);
+    }
+    double theta_l = std::pow(10, std::log10(theta_min) + (-1) * log_factor);
+    double theta_r = std::pow(10, std::log10(theta_min) + jet.angular_num * log_factor);
+    for (int i = 0; i < jet.angular_num; ++i) {
+      if (i == 0) {
+        jet.theta_bin[i] = 0.5 * (jet.theta[i + 1] - theta_l);
+      } else if (i == jet.angular_num - 1) {
+        jet.theta_bin[i] = 0.5 * (theta_r - jet.theta[i - 1]);
+      } else {
+        jet.theta_bin[i] = 0.5 * (jet.theta[i + 1] - jet.theta[i - 1]);
+      }
     }
   }
 
