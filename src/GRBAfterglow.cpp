@@ -20,7 +20,7 @@ GRBAfterglow::GRBAfterglow(Source &s) : s(s) {
 }
 
 void GRBAfterglow::help() {
-  std::cout << "----Welcome to use AMES-GRBAfterglow------" << std::endl;
+  std::cout << "----Welcome to use AMES-GRBAfterglow***------" << std::endl;
   std::cout << "Please see the following information for "
                "proper use."
             << std::endl;
