@@ -368,9 +368,9 @@ void GRBAfterglow::Spectrum(ElectronDistribution &ED, Synchrotron &syn, InverseC
           double delta_s = jet.radius[i][j] / shell_thickness_factor / jet.Gamma[i][j] /
                            jet.Gamma[i][j] / fabs(jet.mu[i][j] - beta_sh);
 
-          double EATS_factor = 2 * PI * jet.theta_bin[i] * sin(jet.theta[i]) * jet.radius[i][j] *
-                               jet.radius[i][j] * fabs(jet.mu[i][j] - beta_sh) /
-                               (1 - beta_sh * jet.mu[i][j]) * (1 + param.z) / param.dl / param.dl;
+          double EATS_factor = jet.theta_bin[i] * sin(jet.theta[i]) * jet.phi_bin[j] * jet.radius[i][j] *
+                        jet.radius[i][j] * abs(jet.mu[i][j] - beta_sh) /
+                        (1 - beta_sh * jet.mu[i][j]) * (1 + param.z) / param.dl / param.dl;
 
           double mag_strength =
               sqrt(32 * PI * mp * c_cnst * c_cnst * param.epsilon_B *
