@@ -19,8 +19,8 @@
 #include "module/synchrotron.hpp"
 
 struct Jet {
-  int angular_num = 40;
-  int phi_num = 40;
+  int angular_num = 20;
+  int phi_num = 20;
   std::vector<double> theta;
   std::vector<double> theta_bin;
   std::vector<double> phi;
@@ -51,8 +51,6 @@ struct GRBAfterglowParam {
                      // into the magnetic energy
   double open_angle; // the openning angle of the outflow [radian]
   double view_angle; // the view angle [radian]
-  double gaussian_cone;
-  double jet_index;
 };
 
 class GRBAfterglow {
