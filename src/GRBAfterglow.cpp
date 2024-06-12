@@ -255,12 +255,20 @@ void GRBAfterglow::Spectrum(ElectronDistribution &ED, Synchrotron &syn, InverseC
 
     photon_syn.assign(num_p, 0.0);
     photon_ssc.assign(num_p, 0.0);
+    double gamma_hat;
+    double gamma_sh;
+    double beta_sh;
     for (size_t i = 0; i < jet.theta.size(); i++) {
       if (param.view_angle == 0) {
         int j = 0;
 
         double beta = sqrt(1. - 1. / (jet.Gamma[i][j] * jet.Gamma[i][j]));
-        double beta_sh = sqrt(1. - 1. / 2 / (jet.Gamma[i][j] * jet.Gamma[i][j]));
+        gamma_hat = (4. * jet.Gamma[i][j] + 1) / 3. / jet.Gamma[i][j];
+        gamma_sh = ((jet.Gamma[i][j] + 1) * (gamma_hat * (jet.Gamma[i][j] - 1) + 1) *
+                    (gamma_hat * (jet.Gamma[i][j] - 1) + 1)) /
+                   (gamma_hat * (2 - gamma_hat) * (jet.Gamma[i][j] - 1) + 2);
+        gamma_sh = sqrt(gamma_sh);
+        beta_sh = sqrt(1. - 1. / (gamma_sh * gamma_sh));
         double doppler_factor = 1. / jet.Gamma[i][j] / (1 - beta * jet.mu[i][j]);
         double delta_sh = jet.radius[i][j] / shell_thickness_factor / (1 - beta_sh * jet.mu[i][j]);
         double delta_s = jet.radius[i][j] / shell_thickness_factor / jet.Gamma[i][j] /
@@ -359,7 +367,13 @@ void GRBAfterglow::Spectrum(ElectronDistribution &ED, Synchrotron &syn, InverseC
       } else {
         for (size_t j = 0; j < jet.phi.size(); j++) {
           double beta = sqrt(1. - 1. / (jet.Gamma[i][j] * jet.Gamma[i][j]));
-          double beta_sh = sqrt(1. - 1. / 2 / (jet.Gamma[i][j] * jet.Gamma[i][j]));
+          gamma_hat = (4. * jet.Gamma[i][j] + 1) / 3. / jet.Gamma[i][j];
+          gamma_sh = ((jet.Gamma[i][j] + 1) * (gamma_hat * (jet.Gamma[i][j] - 1) + 1) *
+                      (gamma_hat * (jet.Gamma[i][j] - 1) + 1)) /
+                     (gamma_hat * (2 - gamma_hat) * (jet.Gamma[i][j] - 1) + 2);
+          gamma_sh = sqrt(gamma_sh);
+          beta_sh = sqrt(1. - 1. / (gamma_sh * gamma_sh));
+
           double doppler_factor = 1. / jet.Gamma[i][j] / (1 - beta * jet.mu[i][j]);
           double delta_sh =
               jet.radius[i][j] / shell_thickness_factor / (1 - beta_sh * jet.mu[i][j]);
