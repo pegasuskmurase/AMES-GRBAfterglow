@@ -2,11 +2,8 @@ cmake_minimum_required(VERSION 3.15)
 project(AMES C CXX)
 
 #ARM64 flag
-if(CMAKE_HOST_SYSTEM_PROCESSOR STREQUAL "arm64")
-    set(CMAKE_OSX_ARCHITECTURES "arm64"
-       CACHE STRING "The list of target architectures to build")
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -arch arm64")
-endif()
+#set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "The list of target architectures to build")
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -arch arm64")
 
 set(CMAKE_CXX_STANDARD 17)
 
