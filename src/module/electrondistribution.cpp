@@ -112,6 +112,12 @@ void ElectronDistribution::IterationSolutionSteadyState(Synchrotron &syn, Invers
       s.electron.setSpectrum(j, spectrum_temp[j]);
     }
     istep++;
+    if (istep > 10) {
+      std::cout << "u_err " << istep << " " << u_err << " " << ERR << " " << momentum_inj << " "
+                << momentum_cooling << " " << momentum_eff << std::endl;
+
+      break;
+    }
   } while (u_err > ERR);
 
   for (size_t i = 0; i < num_t; i++) {
@@ -229,41 +235,17 @@ void ElectronDistribution::IterationSolution(Synchrotron &syn, InverseCompton &I
       s.electron.setSpectrum(j, spectrum_temp[j]);
     }
     istep++;
-  } while (u_err > ERR);
+    if (istep > 10) {
+      std::cout << "u_err " << istep << " " << u_err << " " << ERR << " " << momentum_inj << " "
+                << momentum_cooling << " " << momentum_eff << std::endl;
 
-  /*
-  if (momentum_inj < momentum_cooling) {
-    std::cout << " Slow cooling " << momentum_inj << " " << momentum_cooling << std::endl;
-  } else {
-    std::cout << " Fast cooling " << momentum_inj << " " << momentum_cooling << std::endl;
-  }
-  */
+      break;
+    }
+  } while (u_err > ERR);
 
   for (size_t i = 0; i < num_t; i++) {
     s.target.setSpectrum(i, target_syn[i]);
   }
-
-  /*
-  std::ofstream mystream;
-  mystream.open(output_folder + "/IterationSolution.dat");
-  for (size_t j = 0; j < N; j++) {
-    mystream << x_e[j] << " " << s.electron.spectrum[j] << std::endl;
-  }
-  mystream.close();
-
-  num_tot = utility.Integrate(x, spectrum_temp);
-  num_tot_inj = utility.Integrate(x, Q_inj) / (1. / t_dyn);
-  std::cout << "Iteration SSC " << istep << " u_err " << u_err << " ERR " << ERR << " num_tot "
-            << num_tot << " num_inj " << num_tot_inj << std::endl;
-
-  std::ofstream mystream_timescale;
-  mystream_timescale.open(output_folder + "/IterationSolutionTimescale.dat");
-  for (size_t j = 0; j < N; j++) {
-    mystream_timescale << x_e[j] << " " << 1 / t_dyn << " " << e_loss_Syn[j] << " " << e_loss_SSC[j]
-                       << " " << e_loss_EIC[j] << std::endl;
-  }
-  mystream_timescale.close();
-  */
 }
 
 void ElectronDistribution::Test() {}
