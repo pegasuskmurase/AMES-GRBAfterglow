@@ -1,67 +1,138 @@
-cmake_minimum_required(VERSION 3.15)
-project(AMES C CXX)
-
-#ARM64 flag
-#Please add following two lines if you are using M1/2 Mac
-#set(CMAKE_OSX_ARCHITECTURES "arm64" CACHE STRING "The list of target architectures to build")
-#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -arch arm64")
-
+cmake_minimum_required(VERSION 3.14)
+project(AMES)
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-find_package(SWIG REQUIRED)
-include(${SWIG_USE_FILE})
-
+#find_package(Python 3.13 COMPONENTS Interpreter Development)
 find_package(Python COMPONENTS Interpreter Development)
 
-message(STATUS "Python_FOUND: ${Python_FOUND}")
-message(STATUS "Python_EXECUTABLE: ${Python_EXECUTABLE}")
-message(STATUS "Python_VERSION: ${Python_VERSION}")
-message(STATUS "Python_INCLUDE_DIRS: ${Python_INCLUDE_DIRS}")
-message(STATUS "Python_LIBRARY_DIRS: ${Python_LIBRARY_DIRS}")
-message(STATUS "Python_LIBRARIES: ${Python_LIBRARIES}")
+# Find OpenMP (required for C/C++)
 
-include_directories(${Python_INCLUDE_DIRS})
+# OpenMP Configuration (macOS-specific)
+if(APPLE)
+    # Manually set OpenMP paths for Homebrew-installed libomp
+    set(OPENMP_ROOT "/opt/homebrew/opt/libomp")
+    set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I${OPENMP_ROOT}/include")
+    set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I${OPENMP_ROOT}/include")
+    set(OpenMP_C_LIB_NAMES "omp")
+    set(OpenMP_CXX_LIB_NAMES "omp")
+    set(OpenMP_omp_LIBRARY "${OPENMP_ROOT}/lib/libomp.dylib")
+    
+    find_package(OpenMP REQUIRED)
+    
+    # Special handling for AppleClang
+    if(CMAKE_CXX_COMPILER_ID MATCHES "AppleClang")
+        add_compile_options(-Xpreprocessor)
+        link_directories(${OPENMP_ROOT}/lib)
+    endif()
+else()
+    # Standard OpenMP for other platforms
+    find_package(OpenMP REQUIRED)
+endif()
 
-set_property(SOURCE AMES.i PROPERTY CPLUSPLUS ON) 
 
-# Set the name of your SWIG module and the source files
-set(SWIG_MODULE_myproject_NAME AMES)
-set(SWIG_MODULE_myproject_EXTRA_DEPS ${CMAKE_CURRENT_SOURCE_DIR}/include)
+find_package(pybind11 REQUIRED)
 
-swig_add_library(${SWIG_MODULE_myproject_NAME} 
-    TYPE MODULE 
-    LANGUAGE python 
-    SOURCES AMES.i 
+# Add your executable/library
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -march=native -ffast-math")
+
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -DNDEBUG")
+
+# 3. Configure OpenMP specifically for PyBind11
+if(OpenMP_CXX_FOUND)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+    add_definitions(-DUSE_OPENMP)
+endif()
+
+set_property(SOURCE AMES.i PROPERTY CPLUSPLUS ON)
+
+pybind11_add_module(${PROJECT_NAME}
+src/module/main_bindings.cpp
 src/module/utility.cpp
 src/module/particle.cpp
 src/module/source.cpp
 src/module/synchrotron.cpp
-src/module/inversecompton.cpp
+src/module/compton.cpp
 src/module/gammagamma.cpp
 src/module/electrondistribution.cpp
 src/module/photonbackground.cpp
 src/GRBAfterglow.cpp
 )
 
+target_include_directories(AMES PRIVATE 
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
 
+if(APPLE)
+    # Check if using Homebrew LLVM Clang
+    if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+        target_compile_options(${PROJECT_NAME} PRIVATE
+            $<$<COMPILE_LANGUAGE:CXX>:
+                -Xpreprocessor -fopenmp
+                -fopenmp-simd
+                -ffast-math
+                -fvisibility=default
+                -fno-trapping-math
+                -O3
+                -march=native
+                # Uncomment these for vectorization diagnostics (Clang-only)
+                #-Rpass=loop-vectorize
+                #-Rpass-missed=loop-vectorize
+                #-Rpass-analysis=loop-vectorize
+            >
+        )
+        target_link_libraries(${PROJECT_NAME} PRIVATE omp)
+    endif()
+else()  # Linux or other UNIX
+    target_compile_options(${PROJECT_NAME} PRIVATE
+        $<$<COMPILE_LANGUAGE:CXX>:
+            -fopenmp
+            -fopenmp-simd
+            -ffast-math
+            -fvisibility=default
+            -fno-trapping-math
+            -O3
+            -march=native
+        >
+    )
+endif()
 
-# Set include directories
-set_property(TARGET ${SWIG_MODULE_myproject_NAME} PROPERTY SWIG_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/include)
-set_property(TARGET ${SWIG_MODULE_myproject_NAME} PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/include ${Python_INCLUDE_DIRS})
+# Conditional compilation for Photopair
+target_compile_definitions(${PROJECT_NAME} PRIVATE
+    -DPHOTOPAIR_USE_OPENMP
+)
 
-# Add any other definitions or flags you need
+set_property(TARGET ${PROJECT_NAME} PROPERTY SWIG_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/include)
+set_property(TARGET ${PROJECT_NAME} PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/include ${Python_INCLUDE_DIRS})
+
 add_definitions(-DDATA_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}\" -DINFO)
+#target_link_libraries(${PROJECT_NAME} PRIVATE Python::Python)
+#target_link_libraries(${PROJECT_NAME} PRIVATE Python3::Python GSL::gsl GSL::gslcblas)
+#target_link_libraries(${PROJECT_NAME} PRIVATE ${Python_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PRIVATE ${Python_LIBRARIES})
+target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX) #syu
 
-# Link the SWIG module with the necessary libraries
-target_link_libraries(${SWIG_MODULE_myproject_NAME} PRIVATE ${Python_LIBRARIES})
+#target_link_libraries(${PROJECT_NAME} PRIVATE ${Python_LIBRARIES} GSL::gsl GSL::gslcblas)
+if(Boost_FOUND)
+  include_directories(${Boost_INCLUDE_DIRS})
+  target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES})
+endif()
 
-# Install the SWIG module to the virtual environment
-set(CMAKE_INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX})
-install(TARGETS ${SWIG_MODULE_myproject_NAME}
-    DESTINATION ${CMAKE_INSTALL_PREFIX})
+include_directories(
+    ${CMAKE_CURRENT_SOURCE_DIR}/include  # For your headers
+    ${Python_INCLUDE_DIRS}
+    ${Boost_INCLUDE_DIRS}
+)
 
-#if(APPLE)
+set(CMAKE_CXX_VISIBILITY_PRESET "default")
+set(CMAKE_VISIBILITY_INLINES_HIDDEN OFF)
+if(APPLE)
     # we change the suffix because swig generates a file expecting a .so on mac.
-#    set_target_properties(${SWIG_MODULE_myproject_NAME} PROPERTIES SUFFIX ".so")
-#endif()
+#    set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".so")
+    set_target_properties(${PROJECT_NAME} PROPERTIES CXX_VISIBILITY_PRESET "default")
+endif()
 
+install(TARGETS ${PROJECT_NAME}
+    LIBRARY DESTINATION ${Python_SITEARCH}
+)

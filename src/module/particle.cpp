@@ -215,9 +215,9 @@ void Particle::setSpectrumPLNoExp(double _p_inj, double _p_cut, double _index, d
       spectrum[i] = 0.;
     } else {
       if (norm_type == true) {
-        spectrum[i] = energy[i] * exp((-p_index) * log(momentum[i]));
+        spectrum[i] = energy[i] * exp(-p_index * log(momentum[i]));
       } else {
-        spectrum[i] = exp((-p_index) * log(momentum[i]));
+        spectrum[i] = exp(-p_index * log(momentum[i]));
       }
     }
   }
@@ -230,9 +230,10 @@ void Particle::setSpectrumPLNoExp(double _p_inj, double _p_cut, double _index, d
     } else if (momentum[i] > p_cut) {
       spectrum[i] = 0.;
     } else {
-      spectrum[i] = norm * exp((-p_index) * log(momentum[i]));
+      spectrum[i] = norm * exp(-p_index * log(momentum[i]));
     }
   }
+  std::cout << "norm = " << norm << std::endl;
 }
 
 void Particle::setSpectrumPLwExp(double _p_inj, double _p_cut, double _index, double norm,
@@ -266,18 +267,16 @@ void Particle::setSpectrumPL(double _p_inj, double _p_cut, double _index, double
   p_inj = _p_inj;
   p_cut = _p_cut;
   p_index = _index;
-  int idx = 0;
   double dum;
   for (size_t i = 0; i < p_num; i++) {
     if (momentum[i] < p_inj) {
-      idx++;
       spectrum[i] = 0.;
     } else {
       if (norm_type == true) {
         spectrum[i] = (energy[i] - mass) * exp(-p_index * log(momentum[i])) *
-                      exp(-(momentum[i] / p_cut)); // total energy
+                      exp(-(momentum[i] / p_cut));
       } else {
-        spectrum[i] = exp(-p_index * log(momentum[i])) * exp(-momentum[i] / p_cut);
+        spectrum[i] = exp(-p_index * log(momentum[i])) * exp(-(momentum[i] / p_cut));
       }
     }
   }
@@ -288,7 +287,7 @@ void Particle::setSpectrumPL(double _p_inj, double _p_cut, double _index, double
     if (momentum[i] < p_inj) {
       spectrum[i] = 0.;
     } else {
-      spectrum[i] = norm * exp(-p_index * log(momentum[i])) * exp(-(momentum[i] / p_cut));
+      spectrum[i] = norm * exp(-p_index * log(momentum[i])) * exp(-momentum[i] / p_cut);
     }
   }
 }
@@ -308,9 +307,9 @@ void Particle::setEnergySpectrumPL(double _p_inj, double _p_cut, double _index, 
     } else {
       if (norm_type == true) {
         spectrum[i] =
-            energy[i] * exp((-p_index) * log(energy[i])) * exp(-energy[i] / p_cut); // total energy
+            energy[i] * exp(-p_index * log(energy[i])) * exp(-energy[i] / p_cut); // total energy
       } else {
-        spectrum[i] = exp((-p_index) * log(energy[i])) * exp(-energy[i] / p_cut);
+        spectrum[i] = exp(-p_index * log(energy[i])) * exp(-energy[i] / p_cut);
       }
     }
   }
@@ -458,7 +457,7 @@ void Particle::setSpectrumDelta(double mu, double a, double norm) {
 }
 
 void Particle::setSpectrumDelta(double mu, double a, double norm, bool norm_type) {
-    std::cout << norm << " " << a << " " << mu << std::endl;
+  std::cout << norm << " " << a << " " << mu << std::endl;
   for (size_t i = 0; i < p_num; i++) {
     if (norm_type) {
       spectrum[i] = energy[i] / a / PI * exp(-(momentum[i] - mu) * (momentum[i] - mu) / a / a);

@@ -5,6 +5,7 @@
 const double PI = 3.14159265358979323846;
 
 const double e_mass = 510998;          // electron mass(eV)
+const double electron_mass = 510998;          // electron mass(eV)
 const double pion_mass = 0.13957018e9; // pi+-mass(eV)
 const double proton_mass = 938.271998e6;
 const double neutron_mass = 939.56542052e6;
@@ -14,7 +15,7 @@ const double piz_Mass = 0.1349766e9;             // pi0
 const double mu_Mass = 0.105658357e9;
 
 const double eV2erg = 1.6021e-12; // eV2erg
-const double erg2eV = 6.24152e11; // erg2eV
+const double erg2eV = 6.24152e11; // eV2erg
 const double sigmaT = 6.652e-25;  // Thomson [cm^2]
 const double mubar = 1.0e-30;     // mubar [cm^2]
 const double mbar = 1.0e-27;      // mbar [cm^2]
@@ -32,7 +33,7 @@ const double electron_radius = 2.81794032e-13; // electron radius [cm]
 const double pMass = 0.938271998;              // proton mass(GeV)
 const double mp = 1.67262e-24;                 // proton mass (g)
 const double me = 9.109382e-28;                // proton mass (g)
-const double neutron_Life = 879.6;             // free neutron decay (s), mean life time
+const double neutron_Life = 879.6 * 1e-10;             // free neutron decay (s), mean life time
 const double pic_Life = 2.6033 / 1e8;          // pi+-life(sec)
 const double piz_Life = 8.4 / 1e17;            //
 const double kac_Mass = 0.493677 * 1e9;              // ka+-
@@ -63,5 +64,6 @@ const double T_CMB = 2.72548;         // CMB temperature [K]
 
 const double M_sun = 1.988e33; // g
 const double R_sun = 6.957e10; // cm
+const double AU = 1.495978707e13; //cm
 
 #endif

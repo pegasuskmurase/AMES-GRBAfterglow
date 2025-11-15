@@ -9,25 +9,17 @@
 
 #include "utility.hpp"
 #include <iostream>
+#include <array>
 
 #ifndef PARTICLE_H
 #define PARTICLE_H
 
 class Particle {
-  friend class EMProcess;
-  friend class RadiativeProcess;
-  friend class CRDistribution;
   friend class ElectronDistribution;
   friend class Photonbackground;
   friend class Synchrotron;
   friend class InverseCompton;
-  friend class Bremsstrahlung;
   friend class GammaGamma;
-  friend class Protonproton;
-  friend class Photomeson;
-  friend class Photopair;
-  friend class ProtonSyn;
-  friend class Photodisintegration;
 
 public:
   Particle();
@@ -40,6 +32,7 @@ public:
   int getID() { return ID; }
   std::string getName() { return name; }
   double getMass() { return mass; }
+  double getLife() { return life; }
   double getChargeNumber() { return Z; }
   double getMassNumber() { return A; }
   std::vector<double> getMomentum() { return momentum; }
@@ -59,7 +52,7 @@ public:
   double getSpectraCut() { return p_cut; }
   double getSpectraIndex() { return p_index; }
 
-  int getSize() { return momentum.size(); }
+  int getSize() const { return momentum.size(); }
 
   void setID(int _ID);
   void setName(std::string _name);

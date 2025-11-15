@@ -7,12 +7,25 @@
 // \file source.hpp
 // \brief Basic source class.
 
+#include "module/gammagamma.hpp"
+#include "module/photonbackground.hpp"
+#include "module/compton.hpp"
+#include "module/synchrotron.hpp"
+#include "module/electrondistribution.hpp"
+
 #include "particle.hpp"
 #include "utility.hpp"
-#include <iostream>
 
 #ifndef SOURCE_H
 #define SOURCE_H
+
+class Synchrotron;
+class InverseCompton;
+class GammaGamma;
+class Photonbackground;
+class ElectronDistribution;
+
+class Particle;
 
 class Param {
   /*
@@ -26,9 +39,11 @@ public:
   void setLumDistance(double _lum_distance) { lum_distance = _lum_distance; }
   void setMagStrength(double _mag_strength) { mag_strength = _mag_strength; }
   void setEmissionRadius(double _emission_radius) { emission_radius = _emission_radius; }
+  void setShellWidth(double _shell_width) { shell_width = _shell_width; }  //added by RM 20240704
   void setVelocity(double _velocity) { velocity = _velocity; }
   void setEmissionVolume(double _emission_volume) { emission_volume = _emission_volume; }
   void setAmbientDensity(double _ambient_density) { ambient_density = _ambient_density; }
+  void setZeff(double _Zeff) { Zeff = _Zeff; }
   void setDynamicalTime(double _dynamical_time) { dynamical_time = _dynamical_time; }
   void setDopplerFactor(double _doppler_factor) { doppler_factor = _doppler_factor; }
   void setLorentzFactor(double _lorentz_factor) { lorentz_factor = _lorentz_factor; }
@@ -39,12 +54,15 @@ public:
   double getLumDistance() { return lum_distance; }
   double getMagStrength() { return mag_strength; }
   double getEmissionRadius() { return emission_radius; }
+  double getShellWidth() { return shell_width; } // added by RM 20240704
   double getEmissionVolume() { return emission_volume; }
   double getAmbientDensity() { return ambient_density; }
+  double getZeff() { return Zeff; }
   double getDopplerFactor() { return doppler_factor; }
   double getVelocity() { return velocity; }
   double getLorentzFactor() { return lorentz_factor; }
   double getObsAngle() { return obs_angle; }
+
 
 private:
   std::string name;
@@ -53,8 +71,10 @@ private:
   double lum_distance;
   double mag_strength;
   double emission_radius;
+  double shell_width; // added by RM 20240704
   double emission_volume;
   double ambient_density;
+  double Zeff;
   double dynamical_time;
   double doppler_factor;
   double velocity;
@@ -65,7 +85,9 @@ private:
 class Source {
   /*
   @class: Source
-  @brief: The source class include many kinds of particles
+  @brief: The source class includes: 
+          1, various particles (e.g., gamma-rays, electron, ...)
+          1, physical properties (e.g., size, velocity, ...)
   */
 
   friend class Photonbackground;
@@ -79,6 +101,8 @@ public:
   Source();
   Source(Source &s);
 
+  void clear();
+  void InitSource();
   void setParticle(); // set particles, default in constructor
   void setParam();    // set parameters, default in constructor
   void setNucleus(int mass_number,
@@ -89,50 +113,95 @@ public:
   void LorentzBoost(const std::vector<double> &photon_energy, std::vector<double> &photon_spectrum,
                     double doppler_factor);
   void FluxNorm(const std::vector<double> &photon_energy, std::vector<double> &photon_spectrum);
-  void LuminosityNorm(const std::vector<double> &photon_energy,
-                      std::vector<double> &photon_spectrum);
   void LorentzBoostShell(const std::vector<double> &photon_energy,
                          std::vector<double> &photon_spectrum);
   void LorentzBoostShell(const std::vector<double> &photon_energy,
                          std::vector<double> &photon_spectrum, double doppler_factor);
   void FluxNormShell(const std::vector<double> &photon_energy,
                      std::vector<double> &photon_spectrum);
-  void LuminosityNormShell(const std::vector<double> &photon_energy,
-                           std::vector<double> &photon_spectrum);
 
-  Particle &getPhoton() { return photon; }
-  Particle &getTarget() { return target; }
-  Particle &getElectron() { return electron; }
-  Particle &getNeutrino() { return neutrino; }
-  Particle &getPionminus() { return pionminus; }
-  Particle &getPionplus() { return pionplus; }
-  Particle &getPionzero() { return pionzero; }
-  Particle &getMuonminusL() { return muonminusL; }
-  Particle &getMuonminusR() { return muonminusR; }
-  Particle &getMuonplusL() { return muonplusL; }
-  Particle &getMuonplusR() { return muonplusR; }
-  Particle &getProton() { return proton; }
-  Particle &getNeutron() { return neutron; }
-  Particle &getNucleus() { return nucleus; }
-  Param &getParam() { return param; }
+  void Output(std::vector<ParticleTransport> &p);
+  void Output(std::vector<ParticleTransportChangCooper> &p);
+  void setOutputFolder(std::string _output_folder = ".") { output_folder = _output_folder; }
 
-private:
   Particle photon;
+  Particle photon_syn;
+  Particle photon_IC;
+  Particle photon_pm;
+  Particle photon_pa;
   Particle target;
   Particle electron;
+  Particle electron_prim;
+  Particle electron_pm;
+  Particle electron_pa;
   Particle neutrino;
   Particle pionzero;
   Particle pionminus;
   Particle pionplus;
+  Particle kaonminus;
+  Particle kaonplus;
   Particle muonminusL;
   Particle muonminusR;
   Particle muonplusL;
   Particle muonplusR;
+  Particle muon;
   Particle proton;
   Particle neutron;
   Particle nucleus;
-
+  Particle helium;
+  Particle carbon;
+  Particle oxygen;
+  Particle silicon;
+  Particle iron;
   Param param;
+
+  Particle& getPhoton() { return photon; }
+  Particle& getPhotonSyn() { return photon_syn; }
+  Particle& getPhotonIC() { return photon_IC; }
+  Particle& getPhotonPM() { return photon_pm; }
+  Particle& getPhotonPA() { return photon_pa; }
+  Particle& getTarget() { return target; }
+  Particle& getElectron() { return electron; }
+  Particle& getElectronPrim() { return electron_prim; }
+  Particle& getElectronPM() { return electron_pm; }
+  Particle& getElectronPA() { return electron_pa; }
+  Particle& getNeutrino() { return neutrino; }
+  Particle& getPionminus() { return pionminus; }
+  Particle& getPionplus() { return pionplus; }
+  Particle& getKaonminus() { return kaonminus; }
+  Particle& getKaonplus() { return kaonplus; }
+  Particle& getPionzero() { return pionzero; }
+  Particle& getMuonminusL() { return muonminusL; }
+  Particle& getMuonminusR() { return muonminusR; }
+  Particle& getMuonplusL() { return muonplusL; }
+  Particle& getMuonplusR() { return muonplusR; }
+  Particle& getMuon() { return muon; }
+  Particle& getProton() { return proton; }
+  Particle& getNeutron() { return neutron; }
+  Particle& getHelium() { return helium; }
+  Particle& getCarbon() { return carbon; }
+  Particle& getOxygen() { return oxygen; }
+  Particle& getSilicon() { return silicon; }
+  Particle& getIron() { return iron; }
+  Particle& getNucleus() { return nucleus; }
+  Param& getParam() { return param; }
+
+  // Add getter functions if needed
+  Synchrotron& GetSynchrotron() { return *syn; }
+  InverseCompton& GetIC() { return *IC; }
+  GammaGamma& GetGG() { return *gg; }
+  Photonbackground& GetPH() { return *ph; }
+  ElectronDistribution& GetED() { return *ED; }
+
+  std::string output_folder = ".";
+
+
+private:
+  std::unique_ptr<Synchrotron> syn;
+  std::unique_ptr<InverseCompton> IC;
+  std::unique_ptr<GammaGamma> gg;
+  std::unique_ptr<Photonbackground> ph;
+  std::unique_ptr<ElectronDistribution> ED;
 
   Utility utility;
 };
