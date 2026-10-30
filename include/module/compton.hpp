@@ -10,8 +10,8 @@
 #ifndef INVERSECOMPTON_H
 #define INVERSECOMPTON_H
 
-#include <vector>
 #include "module/utility.hpp"
+#include <vector>
 
 class Source;
 
@@ -23,35 +23,60 @@ class InverseCompton {
 public:
   InverseCompton(Source &s);
 
-  void Transport(std::vector<ParticleTransport> &p, const std::vector<double> &target_energy,
-                 const std::vector<double> &target_spectrum, bool have_compton_attenu = false,
-                 bool have_continue_loss = true, bool have_AIC = false);
+  void Transport(std::vector<ParticleTransport> &p,
+                 const std::vector<double> &target_energy,
+                 const std::vector<double> &target_spectrum,
+                 bool have_compton_attenu = false,
+                 bool have_continue_loss = true, bool have_AIC = false,
+                 bool have_muon = false);
   void Transport(std::vector<ParticleTransportChangCooper> &p,
                  const std::vector<double> &target_energy,
-                 const std::vector<double> &target_spectrum, bool have_AIC = false);
+                 const std::vector<double> &target_spectrum,
+                 bool have_AIC = false, bool have_muon = false);
 
   // energy loss time in units [s^-1]
   void Losstime(); // Electron Inverse-Compton energy loss time
   void Losstime(const std::vector<double> &target_energy,
                 const std::vector<double> &target_spectrum,
-                const std::vector<double> &electron_energy, std::vector<double> &electron_losstime);
+                const std::vector<double> &electron_energy,
+                std::vector<double> &electron_losstime);
+  void Losstime(const double particle_mass,
+                const std::vector<double> &target_energy,
+                const std::vector<double> &target_spectrum,
+                const std::vector<double> &particle_energy,
+                std::vector<double> &particle_losstime);
 
   // Interaction time in units [s^-1]
   void Intetime();
   void Intetime(const std::vector<double> &target_energy,
                 const std::vector<double> &target_spectrum,
-                const std::vector<double> &electron_energy, std::vector<double> &electron_intetime);
+                const std::vector<double> &electron_energy,
+                std::vector<double> &electron_intetime);
+  void Intetime(const double particle_mass,
+                const std::vector<double> &target_energy,
+                const std::vector<double> &target_spectrum,
+                const std::vector<double> &particle_energy,
+                std::vector<double> &particle_intetime);
 
-  void Spec(const std::vector<double> &primary_energy, const std::vector<double> &secondary_energy,
-            const std::vector<double> &target_energy, const std::vector<double> &target_spectrum);
+  void Spec(const std::vector<double> &primary_energy,
+            const std::vector<double> &secondary_energy,
+            const std::vector<double> &target_energy,
+            const std::vector<double> &target_spectrum);
+  void Spec(const double particle_mass,
+            const std::vector<double> &primary_energy,
+            const std::vector<double> &secondary_energy,
+            const std::vector<double> &target_energy,
+            const std::vector<double> &target_spectrum);
 
   void SpecElectron(const std::vector<double> &primary_energy,
                     const std::vector<double> &secondary_energy,
                     const std::vector<double> &target_energy,
                     const std::vector<double> &target_spectrum);
 
-  void SpecAIC(const double costheta, const std::vector<double> &electron_energy,
-               const std::vector<double> &photon_energy, const std::vector<double> &target_energy,
+  void SpecAIC(const double costheta,
+               const std::vector<double> &electron_energy,
+               const std::vector<double> &photon_energy,
+               const std::vector<double> &target_energy,
                const std::vector<double> &target_spectrum);
 
   // radiation emissivity in units [eV^-1 s^-1 cm^-3]
@@ -60,28 +85,46 @@ public:
                   const std::vector<double> &primary_spectrum,
                   const std::vector<double> &secondary_energy,
                   std::vector<double> &secondary_spectrum);
+  void Emissivity(const std::vector<double> &target_energy,
+                  const std::vector<double> &target_spectrum,
+                  const std::vector<double> &primary_energy,
+                  const std::vector<double> &primary_spectrum,
+                  std::vector<double> &photon_energy,
+                  std::vector<double> &photon_spectrum);
   void Emissivity(); // Inverse-Compton emissivity
   void Emissivity(const std::vector<double> &target_energy,
                   const std::vector<double> &target_spectrum);
   void Emissivity(const std::vector<double> &target_energy,
-                  const std::vector<double> &target_spectrum, std::vector<double> &photon_energy,
+                  const std::vector<double> &target_spectrum,
+                  std::vector<double> &photon_energy,
                   std::vector<double> &photon_spectrum);
   // void ICEEmissivity(
   //     const std::vector<double> &secondary_electron_energy,
-  //     std::vector<double> &secondary_electron_spectrum); // Inverse-Compton electron emissivity
-  // void AICEmissivity(double costheta);                   // Anisotropic interse-Compton
-  // emissivity
-  void EmissivityAIC(const double cos_theta, const std::vector<double> &target_energy,
-                  const std::vector<double> &target_spectrum, std::vector<double> &photon_energy,
-                  std::vector<double> &photon_spectrum);
-  void EmissivityAIC(const double costheta, const std::vector<double> &target_energy,
+  //     std::vector<double> &secondary_electron_spectrum); // Inverse-Compton
+  //     electron emissivity
+  // void AICEmissivity(double costheta);                   // Anisotropic
+  // interse-Compton emissivity
+  void EmissivityAIC(const double cos_theta,
+                     const std::vector<double> &target_energy,
+                     const std::vector<double> &target_spectrum,
+                     std::vector<double> &photon_energy,
+                     std::vector<double> &photon_spectrum);
+  void EmissivityAIC(const double costheta,
+                     const std::vector<double> &target_energy,
                      const std::vector<double> &target_spectrum);
 
   void Table(); // Differential cross section for secondary photons from ICS
+  void Table(const double particle_mass,
+             const std::vector<double> &primary_energy,
+             const std::vector<double> &secondary_energy,
+             const std::vector<double> &target_energy,
+             const std::vector<double> &target_spectrum);
   void ICETable();
   std::vector<std::vector<double>> spec;
+  std::vector<std::vector<double>> spec_particle;
   std::vector<std::vector<double>> spec_AIC;
   std::vector<std::vector<std::vector<double>>> table;
+  std::vector<std::vector<std::vector<double>>> table_particle;
   std::vector<std::vector<std::vector<double>>> ICE_table;
 
   void ComptonLosstime(const double mue, const double density,
@@ -99,10 +142,13 @@ private:
   void Losstime(const std::vector<std::vector<double>> &table,
                 const std::vector<double> &target_energy,
                 const std::vector<double> &target_spectrum,
-                const std::vector<double> &particle_energy, std::vector<double> &particle_losstime);
+                const std::vector<double> &particle_energy,
+                std::vector<double> &particle_losstime);
 
-  void Spec(const std::vector<double> &primary_energy, const std::vector<double> &secondary_energy,
-            const std::vector<double> &target_energy, const std::vector<double> &target_spectrum,
+  void Spec(const std::vector<double> &primary_energy,
+            const std::vector<double> &secondary_energy,
+            const std::vector<double> &target_energy,
+            const std::vector<double> &target_spectrum,
             const std::vector<std::vector<std::vector<double>>> &table,
             std::vector<std::vector<double>> &spec);
 
@@ -110,12 +156,14 @@ private:
   void ICCrossTable();
   // return Compton cross section (sigma * c)
   double ICCross(double xs) {
-    // return u.Interpolate(mandelstam, ICcrossT, xs, (int)(log10(xs) / mandelstam_bin));
+    // return u.Interpolate(mandelstam, ICcrossT, xs, (int)(log10(xs) /
+    // mandelstam_bin));
     return u.Interpolate(mandelstam, ICcrossT, xs);
   }
   // return Compton cross section (sigma * c)
   double EICCross(double xs) {
-    // return u.Interpolate(mandelstam, EICcrossT, xs, (int)(log10(xs) / mandelstam_bin));
+    // return u.Interpolate(mandelstam, EICcrossT, xs, (int)(log10(xs) /
+    // mandelstam_bin));
     return u.Interpolate(mandelstam, EICcrossT, xs);
   }
   void ReadCross();
@@ -125,7 +173,9 @@ private:
   std::vector<double> ICcrossT;
   std::vector<double> EICcrossT;
   std::vector<std::vector<double>> ICCross_table;
+  std::vector<std::vector<double>> ICCross_table_particle;
   std::vector<std::vector<double>> EICCross_table;
+  std::vector<std::vector<double>> EICCross_table_particle;
 
   void setAngular();
   size_t angular_num = 51;

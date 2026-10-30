@@ -257,22 +257,64 @@ void bind_utility_and_constants(py::module_& m) {
     m.attr("mu_Life") = mu_Life;
     m.attr("pic_Mass") = pic_Mass;
     m.attr("mu_Mass") = mu_Mass;
+    m.attr("days") = days;
 }
 
 void bind_grbafterglow(py::module_& m) {
-    py::class_<GRBAfterglow>(m, "GRBAfterglow")
+    py::class_<GRBafterglow>(m, "GRBafterglow")
         .def(py::init<Source&>())
-        .def("setGRBAfterglowParam", &GRBAfterglow::setGRBAfterglowParam,
-            py::arg("_param"))
-        .def("setGRBAfterglowRSParam", &GRBAfterglow::setGRBAfterglowRSParam,
-            py::arg("_param_RS"))
-        .def("haveSSCSpec", &GRBAfterglow::haveSSCSpec)
-        .def("haveOneZone", &GRBAfterglow::haveOneZone)
-        .def("haveAttenuSSA", &GRBAfterglow::haveAttenuSSA)
-        .def("haveAttenuGGSource", &GRBAfterglow::haveAttenuGGSource)
-        .def("haveReverseShock", &GRBAfterglow::haveReverseShock)
+        // --- The Parameter Setters You Requested ---
+        // We bind them with snake_case names for Pythonic style
+        .def("setGRBafterglowParam", &GRBafterglow::setGRBafterglowParam, 
+             "Set Forward Shock Parameters. Expects list/array of 21 floats.\n"
+             "Order: z, dl, E_iso, Gamma0, n_ex, ...",
+             py::arg("params"))
+
+        .def("setGRBafterglowRSParam", &GRBafterglow::setGRBafterglowRSParam,
+             "Set Reverse Shock Parameters. Expects list/array of 8 floats.\n"
+             "Order: spec_e_RS, eps_e_RS, frac_e_RS, ...",
+             py::arg("params"))
+
+// --- MCMC Parameter Setter ---
+        // Expects a single list of parameters (log10 or linear as defined in your C++)
+        .def("set_params_mcmc", &GRBafterglow::setParamsFromMCMC,
+             "Update physics parameters from MCMC walker.\n"
+             "Input: List of doubles (E_iso, n_ex, p, eps_e, eps_B, ...)",
+             py::arg("theta"))
+
+        // --- Optimized Flux Calculator ---
+        // Python usage: flux = grb.calculate_lightcurve(time_array, freq_array)
+        .def("calculate_lightcurve", [](GRBafterglow &self, 
+                                        const std::vector<double>& time, 
+                                        const std::vector<double>& freq) {
+            
+            // 1. Create a local output vector
+            std::vector<double> flux_out;
+            
+            // 2. Call the C++ function (which handles resizing and parallelization)
+            // Note: Ensure your C++ implementation allows flux_out to be resized internally
+            // or we pre-resize it here:
+            flux_out.resize(time.size());
+            
+            self.CalculateLightCurveMCMC(flux_out, time, freq);
+            
+            // 3. Return vector
+            // Pybind11/stl.h automatically converts std::vector<double> -> NumPy array
+            return flux_out; 
+        }, 
+        "Calculate Flux for MCMC.\n"
+        "Returns: NumPy array of Flux values corresponding to inputs.",
+        py::arg("time"), py::arg("freq"))
+
+        .def("showInfo", &GRBafterglow::showInfo) // showinfo
+        .def("setOutputFolder", &GRBafterglow::setOutputFolder, py::arg("_output"))
+        .def("haveSSCSpec", &GRBafterglow::haveSSCSpec)
+        .def("haveOneZone", &GRBafterglow::haveOneZone)
+        .def("haveAttenuSSA", &GRBafterglow::haveAttenuSSA)
+        .def("haveAttenuGGSource", &GRBafterglow::haveAttenuGGSource)
+        .def("haveReverseShock", &GRBafterglow::haveReverseShock)
         .def("Flux",
-            [](GRBAfterglow& self, 
+            [](GRBafterglow& self, 
                const std::vector<double>& time_array,
                const std::vector<double>& energy_array_min, const std::vector<double>& energy_array_max) 
             {
@@ -284,8 +326,47 @@ void bind_grbafterglow(py::module_& m) {
             py::arg("energy_array_min"), py::arg("energy_array_max"),
             "Calculate flux using various physical processes (modifies flux_vector in-place)"
         )
+
+        // --- Optimized Flux Calculation for MCMC ---
+        // Instead of passing an empty vector by reference (C++ style),
+        // we write a Lambda to return the result as a NumPy array (Python style).
+        .def("Flux1D", [](GRBafterglow &self, 
+                                const std::vector<double>& time, 
+                                const std::vector<double>& freq_min,
+                                const std::vector<double>& freq_max
+                            ) {
+            
+            // 1. Create output buffer
+            std::vector<double> flux_out;
+            
+            // 2. Call the C++ logic (freq_min = freq_max for monochromatic)
+            self.Flux1D(flux_out, time, freq_min, freq_max);
+            
+            // 3. Return vector (Pybind11 converts this to NumPy array automatically)
+            return flux_out;
+        }, 
+        "Calculate Lightcurve. Returns Flux array.",
+        py::arg("time"), py::arg("freq_min"), py::arg("freq_max"))
+
+        // --- MCMC Helper (If you implemented the optimized setter) ---
+        // .def("set_mcmc_params", &GRBafterglow::setParamsFromMCMC)
+
+	.def("FluxOutput",
+            [](GRBafterglow& self,
+               const std::vector<double>& time_array,
+               const std::vector<double>& energy_array_min,
+               const std::vector<double>& energy_array_max)
+            {
+                self.FluxOutput(time_array, energy_array_min, energy_array_max);
+            },
+            py::arg("time_array"),
+            py::arg("energy_array_min"),
+            py::arg("energy_array_max"),
+            R"pbdoc(
+                Calculate flux for given time and energy ranges
+            )pbdoc")
         .def("Spectrum",
-            [](GRBAfterglow& self, 
+            [](GRBafterglow& self, 
 		    double T
                ) 
             {

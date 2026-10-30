@@ -34,6 +34,7 @@ class Param {
   */
 public:
   void setName(std::string _name) { name = _name; }
+  void setAreaName(std::string _area_name) { area_name = _area_name; }
   void setGeometry(std::string _geometry) { geometry = _geometry; }
   void setRedshift(double _redshift) { redshift = _redshift; }
   void setLumDistance(double _lum_distance) { lum_distance = _lum_distance; }
@@ -48,7 +49,13 @@ public:
   void setDopplerFactor(double _doppler_factor) { doppler_factor = _doppler_factor; }
   void setLorentzFactor(double _lorentz_factor) { lorentz_factor = _lorentz_factor; }
   void setObsAngle(double _obs_angle) { obs_angle = _obs_angle; }
+  // for FF absorption
+  void setEmissionSizeFF(double _emission_size_FF) { emission_size_FF = _emission_size_FF; }
+  void setMediumDensityFF(double _medium_density_FF) { medium_density_FF = _medium_density_FF; }
+  void setTmediumFF(double _T_medium_FF) { T_medium_FF = _T_medium_FF; }
+
   std::string getName() { return name; }
+  std::string getAreaName() { return area_name; }
   std::string getGeometry() { return geometry; }
   double getRedshift() { return redshift; }
   double getLumDistance() { return lum_distance; }
@@ -62,10 +69,14 @@ public:
   double getVelocity() { return velocity; }
   double getLorentzFactor() { return lorentz_factor; }
   double getObsAngle() { return obs_angle; }
-
+  // for FF absorption
+  double getEmissionSizeFF() { return emission_size_FF; }
+  double getMediumDensityFF() { return medium_density_FF; }
+  double getTmediumFF() { return T_medium_FF; }
 
 private:
   std::string name;
+  std::string area_name;
   std::string geometry;
   double redshift;
   double lum_distance;
@@ -80,6 +91,10 @@ private:
   double velocity;
   double lorentz_factor;
   double obs_angle;
+  // for FF absorption
+  double emission_size_FF;
+  double medium_density_FF;
+  double T_medium_FF;
 };
 
 class Source {
@@ -95,7 +110,6 @@ class Source {
   friend class InverseCompton;
   friend class GammaGamma;
   friend class ElectronDistribution;
-  friend class Photonbackground;
 
 public:
   Source();
@@ -129,11 +143,13 @@ public:
   Particle photon_IC;
   Particle photon_pm;
   Particle photon_pa;
+  Particle photon_pp;
   Particle target;
   Particle electron;
   Particle electron_prim;
   Particle electron_pm;
   Particle electron_pa;
+  Particle electron_pp;
   Particle neutrino;
   Particle pionzero;
   Particle pionminus;
@@ -160,11 +176,13 @@ public:
   Particle& getPhotonIC() { return photon_IC; }
   Particle& getPhotonPM() { return photon_pm; }
   Particle& getPhotonPA() { return photon_pa; }
+  Particle& getPhotonPP() { return photon_pp; }
   Particle& getTarget() { return target; }
   Particle& getElectron() { return electron; }
   Particle& getElectronPrim() { return electron_prim; }
   Particle& getElectronPM() { return electron_pm; }
   Particle& getElectronPA() { return electron_pa; }
+  Particle& getElectronPP() { return electron_pp; }
   Particle& getNeutrino() { return neutrino; }
   Particle& getPionminus() { return pionminus; }
   Particle& getPionplus() { return pionplus; }
@@ -191,7 +209,7 @@ public:
   InverseCompton& GetIC() { return *IC; }
   GammaGamma& GetGG() { return *gg; }
   Photonbackground& GetPH() { return *ph; }
-  ElectronDistribution& GetED() { return *ED; }
+  ElectronDistribution& GetElectronD() { return *ElectronD; }
 
   std::string output_folder = ".";
 
@@ -201,7 +219,7 @@ private:
   std::unique_ptr<InverseCompton> IC;
   std::unique_ptr<GammaGamma> gg;
   std::unique_ptr<Photonbackground> ph;
-  std::unique_ptr<ElectronDistribution> ED;
+  std::unique_ptr<ElectronDistribution> ElectronD;
 
   Utility utility;
 };

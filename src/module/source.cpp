@@ -46,10 +46,8 @@ Source::Source(Source& s) {
         gg = std::make_unique<GammaGamma>(*s.gg);
     if (s.ph)
         ph = std::make_unique<Photonbackground>(*s.ph);
-    if (s.ED)
-        ED = std::make_unique<ElectronDistribution>(*s.ED);
-
-    std::cout << "Calling the copy constructor " << std::endl;
+    if (s.ElectronD)
+        ElectronD = std::make_unique<ElectronDistribution>(*s.ElectronD);
 }
 
 void Source::InitSource() {
@@ -57,13 +55,15 @@ void Source::InitSource() {
     IC = std::make_unique<InverseCompton>(*this);
     gg = std::make_unique<GammaGamma>(*this);
     ph = std::make_unique<Photonbackground>(*this);
-    ED = std::make_unique<ElectronDistribution>(*this);
+    ElectronD = std::make_unique<ElectronDistribution>(*this);
 }
 
 void Source::clear() {
     syn.reset();
     IC.reset();
     gg.reset();
+    ph.reset();
+    ElectronD.reset();
 }
 
 void Source::setParticle() {
@@ -130,6 +130,16 @@ void Source::setParticle() {
     photon_pa.setLife(1e30);
     photon_pa.setMomentum(561, 1e-8, 1e20);
 
+    ID = 2205;
+    name = "photon_pp";
+    photon_pp.setID(ID);
+    photon_pp.setName(name);
+    photon_pp.setCharge(0);
+    photon_pp.setMassNumber(0);
+    photon_pp.setMass(0.0);
+    photon_pp.setLife(1e30);
+    photon_pp.setMomentum(561, 1e-8, 1e20);
+
     ID = 11;
     name = "electron";
     electron.setID(ID);
@@ -169,6 +179,16 @@ void Source::setParticle() {
     electron_pa.setMass(e_mass);
     electron_pa.setLife(1e30);
     electron_pa.setMomentum(381, 1e1, 1e20);
+
+    ID = 1103;
+    name = "electron_pp";
+    electron_pp.setID(ID);
+    electron_pp.setName(name);
+    electron_pp.setCharge(1);
+    electron_pp.setMassNumber(0);
+    electron_pp.setMass(e_mass);
+    electron_pp.setLife(1e30);
+    electron_pp.setMomentum(381, 1e1, 1e20);
 
     ID = 12; // represents all flavor neutrinos
     name = "neutrino";
@@ -350,28 +370,32 @@ void Source::setParticle() {
     iron.setLife(1e30);
     iron.setMomentum(161, 1e6, 1e22);
 
-    ID = 2630; // need to be set later
-    name = "iron";
+    ID = 808; // need to be set later
+    name = "oxygen";
     nucleus.setID(ID);
     nucleus.setName(name);
-    nucleus.setCharge(26);
-    nucleus.setMassNumber(56);
-    nucleus.setMass(proton_mass * 26.0 + neutron_mass * 30.0);
+    nucleus.setCharge(8);
+    nucleus.setMassNumber(16);
+    nucleus.setMass(proton_mass * 8.0 + neutron_mass * 8.0);
     nucleus.setLife(1e30);
     nucleus.setMomentum(161, 1e6, 1e22);
 }
 
 void Source::setParam() {
     param.setName("CenA");
+    param.setAreaName("light-crossing");
     param.setGeometry("blob");
     param.setRedshift(0.00785);
     param.setLumDistance(2.7 * Mpc);
-    // param.setMagStrength(1e-4);         // G
-    param.setEmissionRadius(1.0 * Kpc); // G
+    param.setMagStrength(1e-4);         // G
+    param.setEmissionRadius(1.0 * Kpc); // cm
     param.setEmissionVolume(1.);
     param.setDopplerFactor(1.);
     param.setAmbientDensity(1.);
     param.setZeff(2.5);
+    param.setEmissionSizeFF(1.);
+    param.setMediumDensityFF(1.);
+    param.setTmediumFF(1.);
 }
 
 void Source::setNucleus(int mass_number, int charge_number) {
