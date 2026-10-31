@@ -3,27 +3,46 @@ project(AMES)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-#find_package(Python 3.13 COMPONENTS Interpreter Development)
-find_package(Python COMPONENTS Interpreter Development)
+# Prefer the active environment/PATH over a newer system Python.
+# An explicit -DPython_EXECUTABLE=/path/to/python takes precedence.
+set(Python_FIND_STRATEGY LOCATION)
+set(Python_FIND_FRAMEWORK LAST)
+find_package(Python REQUIRED COMPONENTS Interpreter Development)
+message(STATUS "AMES Python: ${Python_EXECUTABLE} (${Python_VERSION})")
+message(STATUS "AMES Python install directory: ${Python_SITEARCH}")
 
 # Find OpenMP (required for C/C++)
 
 # OpenMP Configuration (macOS-specific)
 if(APPLE)
-    # Manually set OpenMP paths for Homebrew-installed libomp
-    set(OPENMP_ROOT "/opt/homebrew/opt/libomp")
-    set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I${OPENMP_ROOT}/include")
-    set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I${OPENMP_ROOT}/include")
+    # Share the selected Python environment's runtime (e.g. NumPy/Conda).
+    # Allow an explicit -DAMES_OPENMP_ROOT=/path/to/prefix override.
+    execute_process(COMMAND "${Python_EXECUTABLE}" -c "import sys; print(sys.prefix)"
+        OUTPUT_VARIABLE AMES_PYTHON_PREFIX OUTPUT_STRIP_TRAILING_WHITESPACE
+        RESULT_VARIABLE AMES_PYTHON_PREFIX_STATUS)
+    if(NOT AMES_PYTHON_PREFIX_STATUS EQUAL 0)
+        message(FATAL_ERROR "Unable to query the selected Python environment")
+    endif()
+    if(NOT AMES_OPENMP_ROOT)
+        if(EXISTS "${AMES_PYTHON_PREFIX}/lib/libomp.dylib" AND
+           EXISTS "${AMES_PYTHON_PREFIX}/include/omp.h")
+            set(AMES_OPENMP_ROOT "${AMES_PYTHON_PREFIX}")
+        else()
+            set(AMES_OPENMP_ROOT "/opt/homebrew/opt/libomp")
+        endif()
+    endif()
+    message(STATUS "AMES OpenMP runtime: ${AMES_OPENMP_ROOT}/lib/libomp.dylib")
+    set(OpenMP_C_FLAGS "-Xpreprocessor -fopenmp -I${AMES_OPENMP_ROOT}/include")
+    set(OpenMP_CXX_FLAGS "-Xpreprocessor -fopenmp -I${AMES_OPENMP_ROOT}/include")
     set(OpenMP_C_LIB_NAMES "omp")
     set(OpenMP_CXX_LIB_NAMES "omp")
-    set(OpenMP_omp_LIBRARY "${OPENMP_ROOT}/lib/libomp.dylib")
+    set(OpenMP_omp_LIBRARY "${AMES_OPENMP_ROOT}/lib/libomp.dylib" CACHE FILEPATH "AMES OpenMP runtime" FORCE)
     
     find_package(OpenMP REQUIRED)
     
     # Special handling for AppleClang
     if(CMAKE_CXX_COMPILER_ID MATCHES "AppleClang")
         add_compile_options(-Xpreprocessor)
-        link_directories(${OPENMP_ROOT}/lib)
     endif()
 else()
     # Standard OpenMP for other platforms
@@ -31,6 +50,7 @@ else()
 endif()
 
 
+set(PYBIND11_FINDPYTHON ON)
 find_package(pybind11 REQUIRED)
 
 # Add your executable/library
@@ -82,7 +102,6 @@ if(APPLE)
                 #-Rpass-analysis=loop-vectorize
             >
         )
-        target_link_libraries(${PROJECT_NAME} PRIVATE omp)
     endif()
 else()  # Linux or other UNIX
     target_compile_options(${PROJECT_NAME} PRIVATE
@@ -110,7 +129,8 @@ add_definitions(-DDATA_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}\" -DINFO)
 #target_link_libraries(${PROJECT_NAME} PRIVATE Python::Python)
 #target_link_libraries(${PROJECT_NAME} PRIVATE Python3::Python GSL::gsl GSL::gslcblas)
 #target_link_libraries(${PROJECT_NAME} PRIVATE ${Python_LIBRARIES})
-target_link_libraries(${PROJECT_NAME} PRIVATE ${Python_LIBRARIES})
+# pybind11_add_module supplies Python extension linking. Linking libpython
+# explicitly can load a second Python runtime with Conda on macOS.
 target_link_libraries(${PROJECT_NAME} PRIVATE OpenMP::OpenMP_CXX) #syu
 
 #target_link_libraries(${PROJECT_NAME} PRIVATE ${Python_LIBRARIES} GSL::gsl GSL::gslcblas)
