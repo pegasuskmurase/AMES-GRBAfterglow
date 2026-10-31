@@ -1,38 +1,18 @@
-import numpy as np
-import matplotlib.pyplot as plt
-import os
+"""Forward-shock light curves: calculate, save returned vectors, and replot.
+
+Run with --help for options. See README.md for column layouts and reload usage.
+All output paths are relative to the current working directory unless specified.
+"""
+import argparse
+from pathlib import Path
+
 import AMES
+import matplotlib.pyplot as plt
+import numpy as np
 
-# -------------------------------
-# Initialize AMES engine
-# -------------------------------
+from example_utils import build_model
 
-def update_s(s):
- num_p, min_p, max_p = 121, 1e7, 1e19
- s.getTarget().setMomentum(161, 1e-9, 1e7);
- s.getPhoton().setMomentum(251, 1e-9, 1e16);
- s.getElectron().setMomentum(361, 1e4, 1e16);
-
-s = AMES.Source()
-update_s(s)
-s.InitSource()
-grb = AMES.GRBafterglow(s)
-
-
-# ===============================================================
-#   GRB AFTERGLOW MODEL (ISM vs WIND)
-# ===============================================================
-class GRB:
-    """
-    medium_type : "ISM"  -> constant density (k = 0)
-                  "wind" -> stellar wind (k = 2)
-    """
-    def __init__(self):
-
-        # -------------------------------
-        # Forward shock microphysics
-        # -------------------------------
-        p = {
+PARAMETERS = {
             'z':           0.15,
             'dl':          723 * AMES.Mpc,
             'E_ej':        1e51,
@@ -50,177 +30,89 @@ class GRB:
             'gaussian_cone': 0.,
             'jet_index':   0.,
             'T_ej':        1e0,
-            'L_ph':         0,
-            'acc_p':        0.1,
-            'eta_acc_p':    1,
-            'spectral_p':    2,
+            'L_ph':         0
         }
 
-        self.p = p
 
-        param = [
-            p['z'], p['dl'], p['E_ej'], p['Gamma0'], p['n_ex'], p['A_star'], p['k_ex'],
-            p['spectral_e'], p['epsilon_e'], p['fraction_e'], p['eta_acc_e'],
-            p['epsilon_B'], p['open_angle'], p['view_angle'],
-            p['gaussian_cone'], p['jet_index'], p['T_ej'], p['L_ph']
-        ]
+class GRB:
+    """Keep the Source alive for as long as its GRBafterglow engine is used."""
 
-        grb.setGRBafterglowParam(param)
-
-        # -------------------------------
-        # Reverse shock microphysics
-        # -------------------------------
-        p_RS = {
-            'spectral_e_RS': 2.2,
-            'epsilon_e_RS': 0.1,
-            'fraction_e_RS': 1.,
-            'eta_acc_e_RS': 1.,
-            'epsilon_B_RS': 0.1,
-        }
-
-        self.p_RS = p_RS
-
-        param_RS = [
-            p_RS['spectral_e_RS'],
-            p_RS['epsilon_e_RS'],
-            p_RS['fraction_e_RS'],
-            p_RS['eta_acc_e_RS'],
-            p_RS['epsilon_B_RS']
-        ]
-
-        grb.setGRBafterglowRSParam(param_RS)
-
-        # -------------------------------
-        # Arrays in time and energy
-        # -------------------------------
-        self.time_array = np.logspace(np.log10(1e1), np.log10(1e7), 61)
-
-        self.energy_array_min = [1e9 / AMES.eV2Hz,
-                                 1e11 / AMES.eV2Hz,
-                                 1e0,
-                                 1e3,
-                                 1e9,
-                                 1e11]
-
+    def __init__(self, output_folder="result/lightcurve", figure_folder="figure"):
+        self.p = PARAMETERS.copy()
+        self.source, self.grb = build_model(self.p)
+        self.time_array = np.logspace(1, 7, 61)  # Observer time [s].
+        # Convert radio frequencies [Hz] to photon energies [eV].
+        self.energy_array_min = np.array([
+            1e9 / AMES.eV2Hz, 1e11 / AMES.eV2Hz, 1.0, 1e3, 1e9, 1e11,
+        ])
+        # Equal limits request monochromatic nu*F_nu; different limits request
+        # band-integrated flux. Both are in erg cm^-2 s^-1.
         self.energy_array_max = self.energy_array_min.copy()
+        self.output_folder = Path(output_folder)
+        self.figure_folder = Path(figure_folder)
+        self.output_folder.mkdir(parents=True, exist_ok=True)
+        self.figure_folder.mkdir(parents=True, exist_ok=True)
 
-        # Create output directories if needed
-        os.makedirs("result", exist_ok=True)
-        os.makedirs("figure", exist_ok=True)
-        self.output_folder = "result"
+    def save_bands(self):
+        """Save the energy limits separately so column meanings survive reload."""
+        np.savetxt(self.output_folder / "bands.txt",
+                   np.column_stack((self.energy_array_min, self.energy_array_max)),
+                   header="energy_min_eV energy_max_eV", fmt="%.17e")
 
-    # ===============================================================
-    #   CALCULATE FLUX
-    # ===============================================================
     def flux(self):
-        grb.haveSSCSpec(True)
-        grb.haveAttenuSSA(True)
-        grb.haveAttenuGGSource(True)
-        grb.haveReverseShock(False)
-        grb.showInfo(False)
+        """Calculate a [time, band] vector and save time plus every flux column.
 
-        flux_vector = grb.Flux(self.time_array,
-                               self.energy_array_min,
-                               self.energy_array_max)
+        The C++ binding returns nested Python lists. Convert them to an ndarray
+        for slicing, saving, or subsequent analysis. Saving and plotting reuse
+        this result without calculating the light curve a second time.
+        """
+        self.flux_vector = np.asarray(self.grb.Flux(
+            self.time_array, self.energy_array_min, self.energy_array_max))
+        self.save_bands()
+        path = self.output_folder / "flux_vector.txt"
+        columns = " ".join(f"flux_band_{i + 1}" for i in range(len(self.energy_array_min)))
+        np.savetxt(path, np.column_stack((self.time_array, self.flux_vector)),
+                   header=f"time_s {columns}\nFlux units: erg cm^-2 s^-1; bands: bands.txt",
+                   fmt="%.17e")
+        print(f"Saved {path}", flush=True)
+        return self.flux_vector
 
-        np.savetxt(self.output_folder + "flux.txt", flux_vector)
-        print("Flux calculation complete → result/flux.txt saved.")
 
-        fig, ax = plt.subplots(figsize=(7, 5))
-
-        for j, ene in enumerate(self.energy_array_min):
-            dum = [flux_vector[i][j] for i in range(len(flux_vector))]
-            ax.plot(self.time_array, dum, '--', lw=2, label=f"E{j}")
-
-        ax.set_xscale('log')
-        ax.set_yscale('log')
-        ax.set_xlim([1e1, 1e7])
-        ax.set_ylim([1e-19, 1e-4])
-        ax.set_xlabel('T [s]', fontsize=15)
-        ax.set_ylabel(r'Flux $[\rm erg\ cm^{-2}\ s^{-1}]$', fontsize=15)
-        ax.legend(fontsize=7)
-
-        plt.tight_layout()
-        plt.savefig("figure/flux.pdf")
+def plot_flux(path, bands_path, figure_path, show=True):
+    """Plot the saved vector table without running the afterglow calculation."""
+    data = np.loadtxt(path, ndmin=2)
+    bands = np.loadtxt(bands_path, ndmin=2)
+    if data.shape[1] != len(bands) + 1:
+        raise ValueError("Flux columns do not match the saved band definitions")
+    fig, ax = plt.subplots(figsize=(7, 5))
+    for j, (low, high) in enumerate(bands):
+        label = f"{low:.3g} eV" if low == high else f"{low:.3g}–{high:.3g} eV"
+        ax.plot(data[:, 0], data[:, j + 1], "--", lw=2, label=label)
+    ax.set(xscale="log", yscale="log", xlabel="Observer time [s]",
+           ylabel=r"Flux [erg cm$^{-2}$ s$^{-1}$]")
+    ax.legend(fontsize=8)
+    fig.tight_layout()
+    figure_path = Path(figure_path)
+    figure_path.parent.mkdir(parents=True, exist_ok=True)
+    fig.savefig(figure_path)
+    if show:
         plt.show()
+    plt.close(fig)
 
-    # ===============================================================
-    #   CALCULATE FLUX Output to file
-    # ===============================================================
-    def calc_flux_output(self):
-        grb.haveSSCSpec(True)
-        grb.haveAttenuSSA(True)
-        grb.haveAttenuGGSource(True)
-        grb.haveReverseShock(True)
-        grb.showInfo(True)
-        grb.setOutputFolder(self.output_folder)
 
-        grb.FluxOutput(self.time_array,
-                               self.energy_array_min,
-                               self.energy_array_max)
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--output-dir", type=Path, default=Path("result/lightcurve"))
+    parser.add_argument("--figure-dir", type=Path, default=Path("figure"))
+    parser.add_argument("--plot-only", action="store_true", help="Reload files; skip computation")
+    parser.add_argument("--no-show", action="store_true", help="Save figure without opening a window")
+    args = parser.parse_args()
+    if not args.plot_only:
+        model = GRB(args.output_dir, args.figure_dir)
+        model.flux()
+    plot_flux(args.output_dir / "flux_vector.txt", args.output_dir / "bands.txt",
+              args.figure_dir / "lightcurve_vector.pdf", show=not args.no_show)
 
-    # ===============================================================
-    #   PLOT RESULTS
-    # ===============================================================
-    def plot_flux_output(self):
-        fig, ax = plt.subplots(figsize=(7, 5))
 
-        data = np.loadtxt(self.output_folder + '/flux.dat')
-        ax.plot(data[:, 0], data[:, 1], 'C0-')
-        ax.plot(data[:, 0], data[:, 2], 'C1-')
-        ax.plot(data[:, 0], data[:, 3], 'C2-')
-        ax.plot(data[:, 0], data[:, 4], 'C3-')
-        ax.plot(data[:, 0], data[:, 5], 'C4-')
-
-        #reverse shock will be checked
-        data = np.loadtxt(self.output_folder + '/flux_RS.dat')
-        ax.plot(data[:, 0], data[:, 1], 'C0--')
-        ax.plot(data[:, 0], data[:, 2], 'C1--')
-        ax.plot(data[:, 0], data[:, 3], 'C2--')
-        ax.plot(data[:, 0], data[:, 4], 'C3--')
-        ax.plot(data[:, 0], data[:, 5], 'C4--')
-
-        ax.set_xscale('log')
-        ax.set_yscale('log')
-        ax.set_xlim([1e1, 1e7])
-        ax.set_ylim([1e-19, 1e-4])
-        ax.set_xlabel('T [s]', fontsize=15)
-        ax.set_ylabel(r'Flux $[\rm erg\ cm^{-2}\ s^{-1}]$', fontsize=15)
-        ax.legend(fontsize=7)
-
-        plt.tight_layout()
-        plt.savefig("figure/flux.pdf")
-        plt.show()
-
-        num = len(s.getPhoton().getMomentum())
-        fig, ax = plt.subplots(figsize=(7, 5))
-        data = np.loadtxt(self.output_folder + '/spectrum.dat')
-        for i, x in enumerate(self.time_array):
-            idx1 = num * i
-            idx2 = num * (i + 1)
-            ax.plot(data[idx1:idx2, 0], data[idx1:idx2, 1], '--', lw=2, label=str(x) + ' s, EATS')
-
-        data = np.loadtxt(self.output_folder + '/spectrum_RS.dat')
-        for i, x in enumerate(self.time_array):
-            idx1 = num * i
-            idx2 = num * (i + 1)
-            #ax.plot(data[idx1:idx2, 0], data[idx1:idx2, 1], '-.', lw=2, label=str(x) + ' s, EATS')
-
-        ax.set_xscale('log')
-        ax.set_yscale('log')
-        ax.set_xlim([1e-8, 1e15])
-        ax.set_ylim([1e-20, 1e-9])
-        ax.set_xlabel('E [eV]', fontsize=15)
-        ax.set_ylabel(r'Flux $[\rm erg \ cm^{-2} \ s^{-1}]$', fontsize=15)
-        ax.legend(fontsize=7)
-        plt.savefig('figure/spectrum.pdf')
-        plt.show()
-
-# ===============================================================
-#   RUN MODEL
-# ===============================================================
-
-g = GRB()
-#g.flux()
-g.calc_flux_output()
-g.plot_flux_output()
+if __name__ == "__main__":
+    main()
