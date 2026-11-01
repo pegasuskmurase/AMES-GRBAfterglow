@@ -1,5 +1,7 @@
 # AMES-GRBAfterglow
 
+[Documentation website](https://pegasuskmurase.github.io/AMES-GRBAfterglow/)
+
 AMES-GRBAfterglow provides a C++ gamma-ray burst afterglow model with a Python
 interface built with pybind11. The forward-shock examples calculate light curves
 and spectra, save the returned vectors as text tables, and reload them for

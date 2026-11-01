@@ -103,17 +103,24 @@ This builds HTML under `site/` without compiling or importing AMES.
 The MkDocs configuration uses the bundled Read the Docs theme; no custom
 website code is required. See the [MkDocs guide](https://www.mkdocs.org/user-guide/).
 
-## Optional publication later
+## GitHub Pages deployment
 
-Review the generated pages first. For GitHub Pages, MkDocs provides:
+The documentation URL is:
+<https://pegasuskmurase.github.io/AMES-GRBAfterglow/>.
 
-```sh
-python -m mkdocs gh-deploy
-```
+The workflow `.github/workflows/docs.yml` builds and deploys the documentation
+when documentation files, MkDocs configuration, dependencies, or the workflow
+are pushed to `main`. It can also be started manually from the repository's
+Actions tab using **Deploy documentation → Run workflow**.
 
-This command commits generated pages and pushes a `gh-pages` branch to your
-configured remote. Run it only when ready to publish, then configure the
-repository's Pages settings to serve that branch. The current change does not
-publish anything or enable automatic deployments. Read the Docs hosting can
-also be configured later; it is not required for the local preview.
-See [MkDocs deployment documentation](https://www.mkdocs.org/user-guide/deploying-your-docs/).
+A repository administrator must enable Pages once under
+**Settings → Pages → Build and deployment → Source → GitHub Actions**.
+After that, contributors with push access can update the Markdown normally;
+no generated HTML needs to be committed. The deployment status is available
+in the Actions tab. A successful local build alone does not mean the website
+has been deployed.
+
+To show the website in the repository sidebar, a repository administrator can
+edit **About → Website** and enter the documentation URL above.
+
+See [GitHub Pages custom workflows](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages).
