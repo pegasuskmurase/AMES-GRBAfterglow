@@ -20,8 +20,10 @@ for your physical model.
 
 ## Run
 
-Build and install AMES following the [project README](../../README.md).
-Activate the Python environment where AMES, NumPy, and Matplotlib are installed.
+Build AMES in a separate directory and install it into your Python environment
+following the [project README](../../README.md). Activate that same environment,
+with NumPy and Matplotlib available. No build-directory `PYTHONPATH` entry is
+needed after installation.
 From this directory:
 
 ```sh

@@ -26,24 +26,47 @@ through CMake's standard compiler checks.
 
 ## Build and install
 
-Run from the repository root in the activated environment:
+Build in a separate directory, then install the module into your active Python
+environment. Replace the example paths below with your own absolute paths.
+Activate your intended environment first (for example, `conda activate crpropa3`).
 
 ```sh
 python --version
-cmake -S . -B build \
+mkdir -p /path/to/AMES-install
+cd /path/to/AMES-install
+
+cmake /path/to/AMES-GRBAfterglow \
   -DPython_EXECUTABLE="$(python -c 'import sys; print(sys.executable)')"
-cmake --build build --parallel
-cmake --install build
+cmake --build . --parallel
+cmake --install .
+```
+
+With the default Unix Makefiles generator, the last two commands can also be
+written as `make -j4` and `make install`. No `install.sh` is required.
+`AMES-install` is a build directory; the install step copies the module into
+the selected Python environment. You do not need to add the build directory to
+`PATH` or `PYTHONPATH` for normal use.
+
+Verify the installation from another directory, with the same environment active:
+
+```sh
+cd /path/to/AMES-GRBAfterglow
 python -c "import AMES; print(AMES.__file__)"
 ```
 
-Alternatively, `bash install.sh` performs these steps and verifies the installed
-module. The helper uses `python` from PATH, falling back to `python3`. Additional
-arguments are passed to the CMake configure step, for example:
+The printed module path should point into that environment's `site-packages`,
+rather than an older build directory. Remove any previous AMES build-directory
+entries from `PYTHONPATH` if they cause Python to load an old copy.
+
+After changing C++ code, rebuild and reinstall from the same build directory:
 
 ```sh
-bash install.sh -DPython_EXECUTABLE=/path/to/environment/bin/python
+cd /path/to/AMES-install
+cmake --build . --parallel
+cmake --install .
 ```
+
+Start a new Python process after reinstalling to load the rebuilt extension.
 
 The build produces a compiled extension such as `AMES.cpython-311-darwin.so`,
 not an `AMES.py` file. Installation places it in the selected Python's
@@ -63,7 +86,8 @@ for its data directory; keep the source/data tree available when running it.
 
 ## Examples
 
-After installation:
+After installation, activate the same Python environment and start from the
+repository root:
 
 ```sh
 cd example/GRBAfterglow
@@ -83,6 +107,18 @@ sets; use matching parameters if you want to compare their physical predictions.
 See the [example guide](example/GRBAfterglow/README.md) for parameter conventions,
 units, output columns, custom directories, and headless plotting. Use each
 script's `--help` for command-line options.
+
+## Documentation
+
+For parameter tables, function reference, and the initial C++/Python interface
+audit, see the [documentation](docs/index.md). To preview it locally:
+
+```sh
+python -m pip install -r requirements-docs.txt
+python -m mkdocs serve
+```
+
+The documentation can be read as Markdown on GitHub without installing MkDocs.
 
 ## Troubleshooting
 
@@ -106,6 +142,6 @@ script's `--help` for command-line options.
 - `src/`, `include/`: C++ model, physics modules, and Python bindings.
 - `data/`: model data used by the C++ code.
 - `example/GRBAfterglow/`: documented Python examples and shared setup.
-- `CMakeLists.txt`, `install.sh`: build configuration and optional install helper.
+- `CMakeLists.txt`: build and installation configuration.
 
 See [LICENSE](LICENSE) for licensing terms.
