@@ -65,8 +65,6 @@ if(OpenMP_CXX_FOUND)
     add_definitions(-DUSE_OPENMP)
 endif()
 
-set_property(SOURCE AMES.i PROPERTY CPLUSPLUS ON)
-
 pybind11_add_module(${PROJECT_NAME}
 src/module/main_bindings.cpp
 src/module/utility.cpp
@@ -122,7 +120,6 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE
     -DPHOTOPAIR_USE_OPENMP
 )
 
-set_property(TARGET ${PROJECT_NAME} PROPERTY SWIG_INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/include)
 set_property(TARGET ${PROJECT_NAME} PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR}/include ${Python_INCLUDE_DIRS})
 
 add_definitions(-DDATA_PATH=\"${CMAKE_CURRENT_SOURCE_DIR}\" -DINFO)
@@ -148,8 +145,6 @@ include_directories(
 set(CMAKE_CXX_VISIBILITY_PRESET "default")
 set(CMAKE_VISIBILITY_INLINES_HIDDEN OFF)
 if(APPLE)
-    # we change the suffix because swig generates a file expecting a .so on mac.
-#    set_target_properties(${PROJECT_NAME} PROPERTIES SUFFIX ".so")
     set_target_properties(${PROJECT_NAME} PROPERTIES CXX_VISIBILITY_PRESET "default")
 endif()
 
