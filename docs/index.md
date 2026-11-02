@@ -9,6 +9,11 @@ calculate light curves and spectra, save returned vectors, and replot results.
 3. Check [parameters and units](parameters.md) and the [Python API](python-api.md).
 4. See [developer notes](developer-guide.md) for the initial function audit.
 
+Read these pages in a Markdown preview or
+[on GitHub](https://github.com/pegasuskmurase/AMES-GRBAfterglow/blob/main/docs/index.md).
+For unavailable pages or section links, see
+[documentation links and publishing](developer-guide.md#documentation-links-and-publishing).
+
 ## Scope
 
 The examples enable SSC, synchrotron self-absorption, and source gamma-gamma

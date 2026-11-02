@@ -83,20 +83,41 @@ spectrum/flux outputs have been removed. `Spectrum` now returns three FS rows.
 columns in `calcDynamic` output are retained.
 This inventory is not a scientific validation of every branch.
 
+## Documentation links and publishing
+
+Links in the root README are relative to the repository root; links between
+pages under `docs/` are relative to that folder. Read them on GitHub or in a
+Markdown preview that supports relative files and heading anchors. Opening raw
+Markdown in a browser does not render its links. Keep the directory structure
+intact when copying or downloading the documentation.
+
+For a browser-accessible copy, use the
+[GitHub documentation index](https://github.com/pegasuskmurase/AMES-GRBAfterglow/blob/main/docs/index.md).
+That copy reflects files published to `main`, not unpublished local edits.
+Update the README and its linked documentation together: a section link such
+as `installation.md#python-environments` only works if the destination version
+contains the corresponding heading.
+
+MkDocs builds `docs/index.md` as the website home page and converts links between
+Markdown pages to website URLs. The root README and `example/GRBAfterglow/README.md`
+are outside the site's `docs/` directory. Do not copy the root README into the
+site unchanged or replace the documentation's `.md` links with `.html` links;
+see the [MkDocs linking guide](https://www.mkdocs.org/user-guide/writing-your-docs/#linking-to-pages).
+
 ## Maintaining and previewing the documentation
 
 From the repository root, preferably in a separate documentation environment:
 
 ```sh
-python -m pip install -r requirements-docs.txt
-python -m mkdocs serve
+python3 -m pip install -r requirements-docs.txt
+python3 -m mkdocs serve
 ```
 
 Open the local URL printed by MkDocs. Edit Markdown files under `docs/` and
 refresh the preview. Check the static output with:
 
 ```sh
-python -m mkdocs build --strict
+python3 -m mkdocs build --strict
 ```
 
 This builds HTML under `site/` without compiling or importing AMES.
@@ -105,8 +126,12 @@ website code is required. See the [MkDocs guide](https://www.mkdocs.org/user-gui
 
 ## GitHub Pages deployment
 
-The documentation URL is:
+The configured website URL, available after a successful Pages deployment, is:
 <https://pegasuskmurase.github.io/AMES-GRBAfterglow/>.
+
+This address currently returns 404. Use the [Markdown documentation](index.md)
+until the site is deployed. Editing a local Markdown file or setting `site_url`
+in `mkdocs.yml` does not publish a website.
 
 The workflow `.github/workflows/docs.yml` builds and deploys the documentation
 when documentation files, MkDocs configuration, dependencies, or the workflow
@@ -119,6 +144,12 @@ After that, contributors with push access can update the Markdown normally;
 no generated HTML needs to be committed. The deployment status is available
 in the Actions tab. A successful local build alone does not mean the website
 has been deployed.
+
+If the address still returns 404, confirm that `docs/`, `mkdocs.yml`,
+`requirements-docs.txt`, and `.github/workflows/docs.yml` are present on `main`,
+that Pages uses GitHub Actions as its publishing source, and that the latest
+**Deploy documentation** run completed its deployment successfully. Use the
+website URL reported by that run to verify the result.
 
 To show the website in the repository sidebar, a repository administrator can
 edit **About → Website** and enter the documentation URL above.

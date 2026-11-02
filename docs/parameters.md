@@ -52,6 +52,6 @@ power-law distribution proportional to energy^-p.
 
 ## Reverse-shock dynamics
 
-Reverse-shock emission and its microphysical parameter setter have been removed
-from this version. The dynamical evolution, including `EvolutionThickShell`,
-RS state variables, and ejecta duration `T_ej`, is retained.
+Reverse-shock emission and its microphysical parameter setter are not included
+in this version. The dynamical evolution, including `EvolutionThickShell`and 
+ejecta duration `T_ej`, is retained.
