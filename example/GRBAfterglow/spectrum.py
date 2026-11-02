@@ -35,9 +35,9 @@ PARAMETERS = {
 
 
 class GRB:
-    def __init__(self, output_folder="result/spectrum"):
+    def __init__(self, output_folder="result/spectrum", angular_num=50, phi_num=50):
         self.p = PARAMETERS.copy()
-        self.source, self.grb = build_model(self.p)
+        self.source, self.grb = build_model(self.p, angular_num=angular_num, phi_num=phi_num)
         self.output_folder = Path(output_folder)
         self.output_folder.mkdir(parents=True, exist_ok=True)
 
@@ -89,11 +89,18 @@ def main():
     parser.add_argument("--figure-dir", type=Path, default=Path("figure"))
     parser.add_argument("--plot-only", action="store_true", help="Reload saved data; --time is ignored")
     parser.add_argument("--no-show", action="store_true", help="Save figures without opening a window")
+    # Change these only after checking convergence; otherwise keep 50 x 50.
+    parser.add_argument("--angular-num", type=int, default=50,
+                        help="Polar grid points (>= 2; default: 50). Change with care: check convergence.")
+    parser.add_argument("--phi-num", type=int, default=50,
+                        help="Azimuthal grid points (>= 2; default: 50). Change with care: check convergence.")
     args = parser.parse_args()
+    if args.angular_num < 2 or args.phi_num < 2:
+        parser.error("--angular-num and --phi-num must both be at least 2")
     if not np.isfinite(args.time) or args.time <= 0:
         parser.error("--time must be finite and positive")
     if not args.plot_only:
-        model = GRB(args.output_dir)
+        model = GRB(args.output_dir, angular_num=args.angular_num, phi_num=args.phi_num)
         model.calc_spectrum(args.time)
     plot_spectrum(args.output_dir / "spectrum_vector.txt", args.figure_dir, show=not args.no_show)
 

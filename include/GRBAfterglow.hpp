@@ -104,6 +104,8 @@ class GRBafterglow {
     void setPlateauEmissionParam(std::vector<double> _param);
 
     void setOutputFolder(std::string _output_folder);
+    // Multi-zone integration grid; each dimension must contain at least 2 points.
+    void setJetResolution(int angular_num = 50, int phi_num = 50);
 
     // set output
     void showInfo(bool _show_info);       // showinfo

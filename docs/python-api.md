@@ -26,6 +26,7 @@ The snippet above only illustrates construction, not a complete calculation.
 | Method | Meaning |
 | --- | --- |
 | `setGRBafterglowParam(params)` | Set the 18 ordered forward-shock parameters; see [parameter table](parameters.md) |
+| `setJetResolution(angular_num=50, phi_num=50)` | Set multi-zone polar and azimuthal grid sizes; integers >= 2. Invalid sizes raise `ValueError`. Does not affect the one-zone calculation. |
 | `haveSSCSpec(enabled)` | Toggle SSC calculation |
 | `haveAttenuSSA(enabled)` | Toggle synchrotron self-absorption |
 | `haveAttenuGGSource(enabled)` | Toggle internal gamma-gamma attenuation |
@@ -34,6 +35,12 @@ The snippet above only illustrates construction, not a complete calculation.
 
 These boolean flags default to `False` in the class definition. The examples
 explicitly enable their desired radiation and attenuation switches.
+
+The jet grid defaults to 50 × 50 without calling a setter. To change it before
+calculating a spectrum or light curve, use `afterglow.setJetResolution(80, 60)`.
+Calling `afterglow.setJetResolution()` restores 50 × 50. The setter rebuilds
+the grid, so it can also be used after a previous calculation. Larger grids
+increase runtime; check convergence when choosing a resolution.
 
 ## `Flux(time_array, energy_array_min, energy_array_max)`
 

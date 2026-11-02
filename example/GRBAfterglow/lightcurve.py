@@ -37,9 +37,10 @@ PARAMETERS = {
 class GRB:
     """Keep the Source alive for as long as its GRBafterglow engine is used."""
 
-    def __init__(self, output_folder="result/lightcurve", figure_folder="figure"):
+    def __init__(self, output_folder="result/lightcurve", figure_folder="figure",
+                 angular_num=50, phi_num=50):
         self.p = PARAMETERS.copy()
-        self.source, self.grb = build_model(self.p)
+        self.source, self.grb = build_model(self.p, angular_num=angular_num, phi_num=phi_num)
         self.time_array = np.logspace(1, 7, 61)  # Observer time [s].
         # Convert radio frequencies [Hz] to photon energies [eV].
         self.energy_array_min = np.array([
@@ -106,9 +107,16 @@ def main():
     parser.add_argument("--figure-dir", type=Path, default=Path("figure"))
     parser.add_argument("--plot-only", action="store_true", help="Reload files; skip computation")
     parser.add_argument("--no-show", action="store_true", help="Save figure without opening a window")
+    # Change these only after checking convergence; otherwise keep 50 x 50.
+    parser.add_argument("--angular-num", type=int, default=50,
+                        help="Polar grid points (>= 2; default: 50). Change with care: check convergence.")
+    parser.add_argument("--phi-num", type=int, default=50,
+                        help="Azimuthal grid points (>= 2; default: 50). Change with care: check convergence.")
     args = parser.parse_args()
+    if args.angular_num < 2 or args.phi_num < 2:
+        parser.error("--angular-num and --phi-num must both be at least 2")
     if not args.plot_only:
-        model = GRB(args.output_dir, args.figure_dir)
+        model = GRB(args.output_dir, args.figure_dir, args.angular_num, args.phi_num)
         model.flux()
     plot_flux(args.output_dir / "flux_vector.txt", args.output_dir / "bands.txt",
               args.figure_dir / "lightcurve_vector.pdf", show=not args.no_show)

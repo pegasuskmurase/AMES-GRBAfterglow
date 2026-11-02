@@ -112,3 +112,19 @@ respect to momentum and jet grids, and validate the physical parameters for
 your application. A single spectrum may take substantial time in C++; a pause
 after `Spectrum ... Begin` does not by itself imply a deadlock. Existing C++
 calculations may delay Python's handling of Ctrl+C.
+
+## Angular grid resolution
+
+Both scripts default to 50 polar points and 50 azimuthal points. Keep these
+defaults unless you have checked numerical convergence: coarser grids can
+change the results, while finer grids increase runtime. Custom values must be
+integers >= 2 and affect calculations only (`--plot-only` reuses saved data).
+
+```sh
+python lightcurve.py --angular-num 80 --phi-num 60
+python spectrum.py --time 1e5 --angular-num 80 --phi-num 60
+```
+
+When using the Python classes directly, pass `angular_num` and `phi_num` to
+`GRB(...)`. Rebuild/install AMES after adding `setJetResolution` before running
+these updated examples.

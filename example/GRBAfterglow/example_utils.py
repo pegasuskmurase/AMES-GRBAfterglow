@@ -13,7 +13,7 @@ PARAMETER_ORDER = (
 )
 
 
-def build_model(parameters):
+def build_model(parameters, angular_num=50, phi_num=50):
     """Return (source, engine), configured for forward-shock emission only.
 
     Momentum grids use the AMES native convention, p*c in eV. Grid resolution
@@ -26,6 +26,8 @@ def build_model(parameters):
     source.InitSource()
     engine = AMES.GRBafterglow(source)
     engine.setGRBafterglowParam([parameters[key] for key in PARAMETER_ORDER])
+    # Keep 50 x 50 unless you have checked angular-grid convergence.
+    engine.setJetResolution(angular_num, phi_num)
     engine.haveSSCSpec(True)
     engine.haveAttenuSSA(True)
     engine.haveAttenuGGSource(True)

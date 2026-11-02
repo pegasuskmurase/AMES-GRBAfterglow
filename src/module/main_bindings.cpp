@@ -302,6 +302,9 @@ void bind_grbafterglow(py::module_& m) {
         py::arg("time"), py::arg("freq"))
 
         .def("showInfo", &GRBafterglow::showInfo) // showinfo
+        .def("setJetResolution", &GRBafterglow::setJetResolution,
+             py::arg("angular_num") = 50, py::arg("phi_num") = 50,
+             "Set the multi-zone angular and azimuthal grid sizes (both >= 2).")
         .def("setOutputFolder", &GRBafterglow::setOutputFolder, py::arg("_output"))
         .def("haveSSCSpec", &GRBafterglow::haveSSCSpec)
         .def("haveOneZone", &GRBafterglow::haveOneZone)

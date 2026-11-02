@@ -15,6 +15,7 @@
 #include <string>
 #include <cmath>
 #include <sstream>
+#include <stdexcept>
 
 GRBafterglow::GRBafterglow(Source& s)
     : s(s), syn(s.GetSynchrotron()), IC(s.GetIC()), gg(s.GetGG()),
@@ -1067,6 +1068,19 @@ double GRBafterglow::PlateauEmissionLuminosity(double T) {
         dum = L_PL * pow(T / T_a_PL, -alpha_st_PL);
     }
     return dum;
+}
+
+void GRBafterglow::setJetResolution(int angular_num, int phi_num) {
+    if (angular_num < 2 || phi_num < 2) {
+        throw std::invalid_argument("angular_num and phi_num must both be at least 2");
+    }
+
+    // Recreate all buffers: resizing only the outer vectors would retain old
+    // row lengths when phi_num changes on an already initialized jet.
+    jet = Jet{};
+    jet.angular_num = angular_num;
+    jet.phi_num = phi_num;
+    InitJet(jet);
 }
 
 void GRBafterglow::InitJet(Jet& jet) {
