@@ -12,7 +12,7 @@ Dr. Yujia Wei, Dr. Riki Matsu, Dr. Yuri Sato, et al.
 
 ## Requirements
 
-- CMake 3.14 or newer.
+- CMake 3.15 or newer.
 - A C++17 compiler and an OpenMP runtime/development headers.
 - Python with development headers; the current local setup has been checked
   with Python 3.11.15 and pybind11 3.0.1.
