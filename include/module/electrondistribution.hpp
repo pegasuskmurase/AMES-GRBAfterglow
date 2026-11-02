@@ -7,25 +7,42 @@
 // \file electrondistribution.hpp
 // \brief numerically determine electron distribution
 
-#include "inversecompton.hpp"
-#include "source.hpp"
-#include "synchrotron.hpp"
 #include "utility.hpp"
+#include "module/gammagamma.hpp"
+#include "module/photonbackground.hpp"
+#include "module/compton.hpp"
+#include "module/synchrotron.hpp"
 
 #ifndef ELECTRONDISTRIBUTION_H
 #define ELECTRONDISTRIBUTION_H
+
+class Source;
 
 class ElectronDistribution {
 public:
   ElectronDistribution(Source &s);
 
   void IterationSolutionSteadyState(Synchrotron &syn, InverseCompton &IC, bool have_EIC = false,
-                         double t_dyn = 1e10, double t_esc_photon = 1e10);
+                         double t_dyn = 1e10, double t_esc_photon = 1e10, double mag_strength=0.);
   void IterationSolution(Synchrotron &syn, InverseCompton &IC, bool have_EIC = false,
-                         double t_dyn = 1e10, double t_ad = 1e10, double t_esc_photon = 1e10);
+                         double t_dyn = 1e10, double t_ad = 1e10, double t_esc_photon = 1e10, double mag_strength=0.);
+
+    void IterationSolution(
+    Synchrotron &syn, InverseCompton &IC, bool have_EIC,
+    double t_dyn, double t_ad, double t_esc_photon, double mag_strength,
+    const std::vector<double>& input_electron_Q, 
+    const std::vector<double>& input_target_spectrum, // Prompt/External photons
+    std::vector<double>& output_electron_N,
+    std::vector<double>& output_target_photon);
+
+  void setMagStrength(double _mag_strength) { mag_strength = _mag_strength; }
+  double getMagStrength() { return mag_strength; }
+
   void Test();
 private:
   Source &s;
   Utility utility;
+  double mag_strength;
 };
+
 #endif

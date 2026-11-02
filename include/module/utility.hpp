@@ -15,6 +15,10 @@
 #include <cmath>
 #include <string>
 #include <vector>
+#include <array>
+#include <cassert>
+#include <iostream>
+#include <memory>
 
 class Utility {
 public:
@@ -22,10 +26,24 @@ public:
   void ResizeVector2d(std::vector<std::vector<double>> &v, int nrow, int ncol);
   int FindCloset(const std::vector<double> &x, double value);
   double Integrate(const std::vector<double> &x, const std::vector<double> &y);
+
+  template<size_t N>
+  double Integrate(const std::array<double, N>& x, const std::array<double, N>& y);
+
   double Integrate(const std::vector<double> &x, const std::vector<double> &y,
                    const double x_begin);
-  double Integrate(const std::vector<double> &x, const std::vector<double> &y, const double x_begin,
-                   const double x_end);
+  double Integrate(const std::vector<double> &x, const std::vector<double> &y, 
+                   const double x_begin, const double x_end);
+
+  double Integrate(const double* x, const double* y, int size) {
+      double sum = 0;
+      #pragma omp simd reduction(+:sum)
+      for (int i = 1; i < size; ++i) {
+          sum += (x[i] - x[i-1]) * (y[i] + y[i-1]);
+      }
+      return 0.5 * sum;
+  }
+
   double Interpolate(const std::vector<double> &x, const std::vector<double> &y, double value);
   double Interpolate(const std::vector<double> &x, const std::vector<double> &y, double value,
                      int idx);
@@ -54,6 +72,8 @@ public:
   void TDMA(const std::vector<double> &a, const std::vector<double> &b,
             const std::vector<double> &c, const std::vector<double> &d, std::vector<double> &f);
 
+  size_t ReadFile2D(const std::string& file_name, std::vector<double>& flat_data);
+
   bool ReadFile2D(std::string file_name, std::vector<std::vector<double>> &raw);
   bool ReadFile2D(std::string file_name, std::vector<std::vector<int>> &raw);
   bool ReadFile1D(std::string file_name, std::vector<double> &raw);
@@ -68,6 +88,9 @@ public:
 
   void Output();
 };
+
+extern template
+double Utility::Integrate<121>(const std::array<double, 121>&, const std::array<double, 121>&);
 
 struct ParticleTransport {
   int ID;

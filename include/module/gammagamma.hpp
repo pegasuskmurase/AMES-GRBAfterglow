@@ -7,10 +7,11 @@
 // \file gammagamma.hpp
 // \brief Basic class for gammagamma process
 
-#include "module/source.hpp"
-
 #ifndef GAMMAGAMMA_H
 #define GAMMAGAMMA_H
+#include "module/utility.hpp"
+
+class Source;
 
 class GammaGamma {
   /*
@@ -19,6 +20,12 @@ class GammaGamma {
   */
 public:
   GammaGamma(Source &s);
+
+  void Transport(std::vector<ParticleTransport> &p, const std::vector<double> &target_energy,
+                 const std::vector<double> &target_spectrum, bool have_muon= false, bool have_spec_approx = false);
+  void Transport(std::vector<ParticleTransportChangCooper> &p,
+                 const std::vector<double> &target_energy,
+                 const std::vector<double> &target_spectrum);
 
   // energy loss time in units [s^-1]
   void Losstime(); // Electron Inverse-Compton energy loss time
@@ -40,14 +47,44 @@ public:
                 const std::vector<double> &photon_energy, std::vector<double> &photon_intetime,
                 double redshift);
 
+  //
+  void Spec(const std::vector<double> &primary_energy, const std::vector<double> &secondary_energy,
+            const std::vector<double> &target_energy, const std::vector<double> &target_spectrum);
+  void SpecMuon(const std::vector<double> &primary_energy,
+                const std::vector<double> &secondary_energy,
+                const std::vector<double> &target_energy,
+                const std::vector<double> &target_spectrum);
+  void SpecApprox(const std::vector<double> &primary_energy,
+                  const std::vector<double> &secondary_energy,
+                  const std::vector<double> &secondary_momentum_bin,
+                  const std::vector<double> &photon_intetime);
+
+  void Emissivity();
+  void EmissivityMuon();
+  void Emissivity(const std::vector<std::vector<double>> &spec,
+                  const std::vector<double> &primary_momentum,
+                  const std::vector<double> &primary_spectrum,
+                  const std::vector<double> &secondary_energy,
+                  std::vector<double> &secondary_spectrum);
+
   void Attenuation(const std::vector<double> &photon_energy, std::vector<double> &photon_spectrum);
   void Attenuation(std::vector<double> &photon_spectrum);
 
-  // return Compton cross section (sigma * c)
+  double Table(double Ee, double Eg, double eps);
+  double TableMaxEe(double Eg, double eps);
+  double GGCrossTable(double Ep, double eps);
+  void Table();
+  void Table_Lee1998();
+  void Table_Zdziarski1988();
+  std::vector<std::vector<double>> spec;
+  std::vector<std::vector<std::vector<double>>> table;
+  void TableMuon();
+  std::vector<std::vector<std::vector<double>>> table_muon;
+  // return gamma-gamma cross section (sigma * c)
   double GGCross(double xs) {
     return u.Interpolate(mandelstam, GGcrossT, xs, (int)(log10(xs) / mandelstam_bin));
   }
-  // return Compton cross section (sigma * c)
+  // return gamma-gamma cross section (sigma * c)
   double EGGCross(double xs) {
     return u.Interpolate(mandelstam, EGGcrossT, xs, (int)(log10(xs) / mandelstam_bin));
   }
@@ -63,9 +100,21 @@ private:
                 const std::vector<double> &target_spectrum,
                 const std::vector<double> &particle_energy, std::vector<double> &particle_losstime);
 
+  void Spec(const std::vector<double> &primary_energy, const std::vector<double> &secondary_energy,
+            const std::vector<double> &target_energy, const std::vector<double> &target_spectrum,
+            const std::vector<std::vector<std::vector<double>>> &table,
+            std::vector<std::vector<double>> &spec);
+  void SpecMuon(const std::vector<double> &primary_energy,
+                const std::vector<double> &secondary_energy,
+                const std::vector<double> &target_energy,
+                const std::vector<double> &target_spectrum,
+                const std::vector<std::vector<std::vector<double>>> &table_muon,
+                std::vector<std::vector<double>> &spec);
+
   void EGGCrossTable();
   void GGCrossTable();
   void ReadCross();
+  double PPCross(double mandels);
   const static size_t mandelstam_num = 601;
   static constexpr double mandelstam_bin = 0.025;
   std::vector<double> mandelstam;
@@ -73,6 +122,8 @@ private:
   std::vector<double> EGGcrossT;
   std::vector<std::vector<double>> GGCross_table;
   std::vector<std::vector<double>> EGGCross_table;
+  void GGCrossTableMuon();
+  std::vector<std::vector<double>> GGCross_table_muon;
 
   void setAngular();
   size_t angular_num = 51;

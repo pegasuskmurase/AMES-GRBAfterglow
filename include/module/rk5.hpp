@@ -1,4 +1,5 @@
 #include <cmath>
+#include <limits>
 #include <vector>
 
 template <typename DerivedFunction> class rk5 {
@@ -20,11 +21,12 @@ public:
     yerr.resize(n);
     ytemp.resize(n);
     EPS = std::numeric_limits<double>::epsilon();
-    atol = 1e-13;
-    rtol = 1e-13;
+    atol = 1e-10;
+    rtol = 1e-10;
     dense = true;
   }
 
+  std::vector<double> integrateValue(const double x2);
   std::vector<double> integrate(const double x2);
   std::vector<double> integrateEATS(const double x2, const double mu);
   std::vector<std::vector<double>> integrate(const std::vector<double> x2);
@@ -61,28 +63,76 @@ private:
 template <typename DerivedFunction>
 std::vector<std::vector<double>> rk5<DerivedFunction>::integrate(const std::vector<double> x2) {
   std::vector<std::vector<double>> yvalue;
-  yvalue.resize(x2.size(), std::vector<double>(n + 1, 0.));
+  yvalue.resize(x2.size(), std::vector<double>(n, 0.));
   htry = 1e-11;
   double xmax = x2.back();
   int idx = 0;
-  double beta;
-  double t_lab = 0.0;
-  double y_pre = y[0];
-  double dr;
+  // double beta;
+  // double t_lab = 0.0;
+  // double y_pre = y[0];
+  // double dr;
   while (x < xmax) {
     step();
-    beta = sqrt(1 - 1. / (y[2] * y[2]));
-    dr = y[0] - y_pre;
-    y_pre = y[0];
-    t_lab += dr / (beta * c_cnst);
-    while ((x2[idx] < xold + hold) && (x2[idx] > xold)) {
+    // beta = sqrt(1 - 1. / (y[2] * y[2]));
+    // dr = y[0] - y_pre;
+    // y_pre = y[0];
+    // t_lab += dr / (beta * c_cnst);
+    while ((x2[idx] < xold + hold) && (x2[idx] >= xold)) {
       for (size_t i = 0; i < n; i++) {
         yvalue[idx][i] = dense_out(i, x2[idx], xold);
       }
-      yvalue[idx][n] = t_lab - (y[0] - yvalue[idx][0]) / (beta * c_cnst);
+      // yvalue[idx][n] = t_lab - (y[0] - yvalue[idx][0]) / (beta * c_cnst);
       idx++;
     }
   }
+  return yvalue;
+}
+
+template <typename DerivedFunction>
+std::vector<double> rk5<DerivedFunction>::integrateValue(const double x2) {
+  std::vector<double> yvalue(n);
+  htry = 1e-11;
+  while (x < x2) {
+    step();
+    if ((x2 < xold + hold) && (x2 > xold)) {
+      for (size_t i = 0; i < n; i++) {
+        yvalue[i] = dense_out(i, x2, xold);
+      }
+    }
+  }
+  return yvalue;
+}
+
+template <typename DerivedFunction>
+std::vector<double> rk5<DerivedFunction>::integrateEATS(const double T, const double mu) {
+  std::vector<double> yvalue(n + 1);
+  std::vector<double> yavalue(n + 1);
+  htry = 1e-11;
+  double Ta, Tb;
+  while (x <= T + mu * y[0] / c_cnst) {
+    for (size_t i = 0; i < n; i++) {
+      yavalue[i] = y[i];
+    }
+    yavalue[n] = x;
+    Ta = x - mu * y[0] / c_cnst;
+    step();
+  }
+  Tb = x - mu * y[0] / c_cnst;
+
+  for (size_t i = 0; i < n; i++) {
+    //yvalue[i] = yavalue[i] + (y[i] - yavalue[i]) / (Tb - Ta) * (T - Ta);
+    yvalue[i] = y[i];
+  }
+  yvalue[n] = yavalue[n] + (x - yavalue[n]) / (Tb - Ta) * (T - Ta);
+
+  /*
+  if (std::abs(x - mu * y[0] / c_cnst - T) / T > 0.1) {
+    std::cout << "Warning: " << T << " " << x - mu * y[0] / c_cnst << " "
+              << (x - mu * y[0] / c_cnst - T) / T << " " << y[2] << " " << y[0] << " " << mu << " "
+              << x << std::endl;
+  }
+  */
+
   return yvalue;
 }
 
@@ -103,25 +153,6 @@ std::vector<double> rk5<DerivedFunction>::integrate(const double x2) {
       yvalue[n] = t_lab - (x - x2) / (1 - beta);
     }
   }
-  return yvalue;
-}
-
-
-template <typename DerivedFunction>
-std::vector<double> rk5<DerivedFunction>::integrateEATS(const double T, const double mu) {
-  std::vector<double> yvalue(n);
-  htry = 1e-11;
-  while (x < T + mu * y[0] / c_cnst) {
-    step();
-  }
-  for (size_t i = 0; i < n; i++) {
-    yvalue[i] = y[i];
-  }
-
-  if (abs(x - mu * y[0] / c_cnst - T) / T > 0.1) {
-      std::cout << "Warning: " << T << " " <<  x - mu * y[0] / c_cnst << " " << (x - mu * y[0] / c_cnst - T) / T << " " << y[2] << " " << y[0] << " " << mu << " " << x << std::endl;
-  }
-
   return yvalue;
 }
 

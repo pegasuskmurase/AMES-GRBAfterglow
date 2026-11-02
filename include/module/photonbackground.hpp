@@ -12,6 +12,7 @@
 
 #include "source.hpp"
 #include "utility.hpp"
+#include <vector>
 
 class Photonbackground {
 public:
@@ -22,14 +23,22 @@ public:
   void Powerlaw(double eps_min, double eps_max, double index, double u_ph);
   void BrokenPowerlaw(double eps_min, double eps_break, double eps_max, double index_1,
                       double index_2, double u_ph);
+  void BrokenPowerlawSegment(double eps_min, double eps_1, double eps_2, double eps_max,
+                             double index_1, double index_2, double index_3, double u_ph);
+  void BandFunction(double eps_min, double eps_peak, double eps_max, double index_1, double index_2,
+                    double u_ph);
+  void BandFunctionPL(double eps_min, double eps_peak, double eps_max, double index_1,
+                      double index_2, double u_ph);
 
   void CMB(double redshift);
-  void EBL(double redshift, std::string EBL_model = "EBL_Gilmore12");
-  void EBLTau(double redshift, std::string EBL_model = "EBL_Gilmore12");
+  void EBL(double redshift, std::string EBL_model = "EBL_Franceschini08");
+  void EBLTau(double redshift, std::string EBL_model = "EBL_Franceschini08");
   void EBLAttenuation(const std::vector<double> &photon_energy,
                       std::vector<double> &photon_spectrum);
   double EBLAttenuation(double photon_energy, double photon_spectrum);
 
+  void calcOpticalDepth(double redshift = 0.0, std::string EBL_model = "EBL_Franceschini08");
+  void CosmologicalOpticalDepth(double redshift, std::string EBL_model);
   void setOutputFile(std::string _output_file) { output_file = _output_file; }
 
   /*
@@ -40,6 +49,7 @@ public:
   void EBL_Franceschini08(double redshift);
   void EBL_Gilmore12(double redshift);
   void EBL_Finke10(double redshift);
+  void EBL_10(double redshift);
   void EBLTau_Franceschini08(double redshift);
   void EBLTau_Gilmore12(double redshift);
   std::string EBL_Franceschini08() { return "EBL_Franceschini08"; }
