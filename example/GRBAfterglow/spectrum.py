@@ -45,19 +45,18 @@ class GRB:
         """Save the energy grid and forward-shock components in column order.
 
         Spectrum returns [component, energy], unlike Flux's [time, band].
-        Components 0/1/2 are forward-shock synchrotron/SSC/EIC; 3/4/5 are
-        reverse-shock components and are omitted from this forward-shock example.
+        The three components are forward-shock synchrotron/SSC/EIC.
         """
         print(f"Computing spectrum at observer time {time:g} s", flush=True)
         self.flux_vector = np.asarray(self.grb.Spectrum(time))
         energy = np.asarray(self.source.getPhoton().getEnergy())
-        forward = self.flux_vector[:3].T
+        forward = self.flux_vector.T
         data = np.column_stack((energy, forward, forward.sum(axis=1)))
         path = self.output_folder / "spectrum_vector.txt"
         np.savetxt(path, data, fmt="%.17e", header=(
             f"Observer time_s = {time:.17e}\n"
             "energy_eV synchrotron_FS SSC_FS EIC_FS total_FS\n"
-            "Flux columns: nu*F_nu [erg cm^-2 s^-1]; reverse shock disabled"))
+            "Flux columns: nu*F_nu [erg cm^-2 s^-1]"))
         print(f"Saved {path}", flush=True)
         return self.flux_vector
 

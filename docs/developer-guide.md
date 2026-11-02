@@ -19,12 +19,10 @@ The constructor `GRBafterglow(Source&)` is implemented and bound as
 | --- | --- | --- | --- |
 | `help` | Yes | Not bound | 0 |
 | `setGRBafterglowParam` | Yes | `setGRBafterglowParam` | 0 |
-| `setGRBafterglowRSParam` | Yes | `setGRBafterglowRSParam` | 0 |
 | `setExtendedEmissionParam` | Yes | Not bound | 0 |
 | `setPlateauEmissionParam` | Yes | Not bound | 0 |
 | `setOutputFolder` | Yes | `setOutputFolder` | 0 |
 | `showInfo` | Yes | `showInfo` | 0 |
-| `haveReverseShock` | Yes | `haveReverseShock` | 0 |
 | `haveOneZone` | Yes | `haveOneZone` | 0 |
 | `haveSSCSpec` | Yes | `haveSSCSpec` | 0 |
 | `haveEICSpec` | Yes | Not bound | 0 |
@@ -40,7 +38,6 @@ The constructor `GRBafterglow(Source&)` is implemented and bound as
 | `CalculateLightCurveMCMC` | Yes | `calculate_lightcurve` | 0 |
 | `Spectrum` | Yes | `Spectrum` | 5 |
 | `SpectrumOneZone` | Yes | Not bound | 1 |
-| `ReverseShock` | Yes | Not bound | 1 |
 | `InitJet` | Yes | Not bound | 5 |
 | `EvolutionThickShell` | Yes | Not bound | 2 |
 | `calcDynamic` | Yes | Not bound | 0 |
@@ -48,9 +45,9 @@ The constructor `GRBafterglow(Source&)` is implemented and bound as
 | `ExtendedEmissionLuminosity` | Yes | Not bound | 1 |
 | `PlateauEmissionLuminosity` | Yes | Not bound | 1 |
 | `ExternalDensity` | Yes | Not bound | 3 |
-| `MomentumInj` | Yes | Not bound | 4 |
-| `MomentumMax` | Yes | Not bound | 5 |
-| `DecelerationRadius` | Yes | Not bound | 3 |
+| `MomentumInj` | Yes | Not bound | 2 |
+| `MomentumMax` | Yes | Not bound | 3 |
+| `DecelerationRadius` | Yes | Not bound | 2 |
 | `EvolutionThinShellAnalytic` | Yes | Not bound | 1 |
 | `LorentzBoost` | Yes | Not bound | 2 |
 | `FluxNorm` | Yes | Not bound | 2 |
@@ -80,7 +77,10 @@ The constructor `GRBafterglow(Source&)` is implemented and bound as
 - Source lifetime is managed by the example object, but the binding currently
   does not declare a keep-alive policy. Retain the Source explicitly.
 
-No C++ functions were deleted or behavior changed for this documentation pass.
+Reverse-shock emission, its controls and microphysical parameters, and its
+spectrum/flux outputs have been removed. `Spectrum` now returns three FS rows.
+`EvolutionThickShell`, `DynamicThickShell`, RS state variables, and the RS
+columns in `calcDynamic` output are retained.
 This inventory is not a scientific validation of every branch.
 
 ## Maintaining and previewing the documentation

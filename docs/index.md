@@ -12,7 +12,8 @@ calculate light curves and spectra, save returned vectors, and replot results.
 ## Scope
 
 The examples enable SSC, synchrotron self-absorption, and source gamma-gamma
-attenuation, with reverse shock disabled. Other code paths exist, but their
+attenuation. Reverse-shock emission is not included in this version; RS
+dynamical evolution is retained. Other code paths exist, but their
 presence or Python exposure is not a claim of scientific validation.
 The two examples use different illustrative model parameters.
 

@@ -102,7 +102,7 @@ python spectrum.py --plot-only
 ```
 
 Both scripts use the same simple workflow: **calculate a vector, save it with
-NumPy, then plot the saved table**. Reverse shock is explicitly disabled.
+NumPy, then plot the saved table**. Reverse-shock emission is not included in this version.
 The light-curve and spectrum examples retain different illustrative parameter
 sets; use matching parameters if you want to compare their physical predictions.
 

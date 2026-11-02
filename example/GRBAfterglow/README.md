@@ -34,10 +34,9 @@ python lightcurve.py
 python spectrum.py --time 1e5
 ```
 
-Both scripts explicitly disable reverse shock and enable SSC, synchrotron
-self-absorption, and source gamma-gamma attenuation. EIC is included in the saved
-component layout, but may be zero for this configuration. Reverse-shock fields
-may still appear in C++ diagnostic messages; that does not enable reverse shock.
+Both scripts enable SSC, synchrotron self-absorption, and source gamma-gamma
+attenuation. EIC is included in the saved component layout, but may be zero for
+this configuration. Reverse-shock emission is not included in this version.
 
 The light-curve calculation uses 61 times from 10 to 10^7 seconds and six energy
 channels: 1 GHz, 100 GHz (converted to eV), 1 eV, 1 keV, 1 GeV, and 100 GeV.
@@ -94,8 +93,7 @@ retain the parameter dictionaries and code version to reproduce a calculation.
 | `GRB.calc_spectrum()` / `Spectrum` | `result/spectrum/spectrum_vector.txt` | energy_eV, synchrotron_FS, SSC_FS, EIC_FS, total_FS |
 
 `Flux` returns **[time, band]**. `Spectrum` returns **[component, energy]**, so
-transpose the first three component rows before saving them beside the energy
-axis. The remaining three rows are reverse-shock components, omitted here.
+transpose the three component rows before saving them beside the energy axis.
 
 Both examples use one workflow: calculate a vector, save it with NumPy, then
 plot the saved table. `--plot-only` skips the calculation. The C++ `FluxOutput`

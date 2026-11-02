@@ -81,13 +81,6 @@ struct GRBafterglowParam {
     // --- Duration ---
     double T_ej = 10.0;
 
-    // --- RS Electrons ---
-    double spectral_e_RS = 2.2;
-    double epsilon_e_RS = 0.1;
-    double eta_acc_e_RS = 10.0;
-    double epsilon_B_RS = 1e-3;
-    double fraction_e_RS = 1.0;
-
     // --- Prompt ---
     double L_ph = 1e51;
 };
@@ -105,7 +98,6 @@ class GRBafterglow {
 
     void help();
     void setGRBafterglowParam(const std::vector<double>& _param);
-    void setGRBafterglowRSParam(const std::vector<double>& _param);
 
     // External photon density
     void setExtendedEmissionParam(std::vector<double> _param);
@@ -115,7 +107,6 @@ class GRBafterglow {
 
     // set output
     void showInfo(bool _show_info);       // showinfo
-    void haveReverseShock(bool _have_RS); // have RS
     void haveOneZone(bool _have_onezone); // One zone
     void haveSSCSpec(bool _have_SSCSpec); // SSC
     void haveEICSpec(bool _have_EICSpec); // EIC
@@ -158,7 +149,6 @@ class GRBafterglow {
 
     void Spectrum(double T);
     void SpectrumOneZone(double T);
-    void ReverseShock(Jet& jet);
 
     void InitJet(Jet& jet);
 
@@ -212,7 +202,6 @@ class GRBafterglow {
     bool have_attenu_FF = false;
     bool have_attenu_GG_source = false;
     bool have_attenu_GG_cosmic = false;
-    bool have_RS = false;
     bool show_info = false;
 
     // Store previous geometric params to check if InitJet is needed
@@ -242,12 +231,6 @@ class GRBafterglow {
     std::vector<double> photon_syn_diff;
     std::vector<double> photon_ssc_diff;
     std::vector<double> photon_eic_diff;
-    std::vector<double> photon_syn_RS;
-    std::vector<double> photon_ssc_RS;
-    std::vector<double> photon_eic_RS;
-    std::vector<double> photon_syn_RS_obs;
-    std::vector<double> photon_ssc_RS_obs;
-    std::vector<double> photon_eic_RS_obs;
 
     std::vector<double> electron_energy;
     std::vector<double> proton_energy;
@@ -255,10 +238,6 @@ class GRBafterglow {
     std::vector<double> timescale_syn_out;
     std::vector<double> timescale_pa_out;
     std::vector<double> timescale_pm_out;
-    std::vector<double> timescale_dyn_RS_out;
-    std::vector<double> timescale_syn_RS_out;
-    std::vector<double> timescale_pa_RS_out;
-    std::vector<double> timescale_pm_RS_out;
 
     double syn_dum;
     double ssc_dum;

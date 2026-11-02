@@ -52,12 +52,6 @@ GRBafterglow::GRBafterglow(Source& s)
 
     photon_losstime.resize(num_p, 0.0);
 
-    photon_syn_RS.resize(num_p, 0.0);
-    photon_ssc_RS.resize(num_p, 0.0);
-    photon_eic_RS.resize(num_p, 0.0);
-    photon_syn_RS_obs.resize(num_p, 0.0);
-    photon_ssc_RS_obs.resize(num_p, 0.0);
-    photon_eic_RS_obs.resize(num_p, 0.0);
 
     electron_energy = s.getElectron().getEnergy();
     }
@@ -176,18 +170,6 @@ void GRBafterglow::setGRBafterglowParam(const std::vector<double>& v) {
 
 }
 
-void GRBafterglow::setGRBafterglowRSParam(const std::vector<double>& v) {
-    std::vector<ParamBinding> bindings = {
-        { &param.spectral_e_RS, {0.0, 5.0, 2.2},      "spectral_e (RS)" },
-        { &param.epsilon_e_RS,  {1e-8, 1.0, 0.1},     "epsilon_e (RS)" },
-        { &param.fraction_e_RS, {1e-4, 1.0, 1.0},     "fraction_e (RS)" },
-        { &param.eta_acc_e_RS,  {1.0, 1e6, 1000.0},   "eta_acc_e (RS)" },
-        { &param.epsilon_B_RS,  {1e-8, 0.5, 1e-3},    "epsilon_B (RS)" },
-    };
-
-    process_bindings(v, bindings);
-}
-
 void GRBafterglow::setExtendedEmissionParam(std::vector<double> _param) {
     L_EE = _param[0];
     T_a_EE = _param[1];
@@ -245,9 +227,6 @@ void GRBafterglow::haveAttenuGGCosmic(bool _have_attenu_GG_cosmic) {
     have_attenu_GG_cosmic = _have_attenu_GG_cosmic;
 }
 
-void GRBafterglow::haveReverseShock(bool _have_RS) {
-    have_RS = _have_RS;
-}; // have RS
 
 
 void GRBafterglow::Spectrum(std::vector<std::vector<double>>& flux_vector,
@@ -272,11 +251,6 @@ void GRBafterglow::Spectrum(std::vector<std::vector<double>>& flux_vector,
     std::cout << "Ejecta Duration (T ej): " << param.T_ej << " s" << std::endl;                          
 
 
-    std::cout << "Electron RS Spectral Index (spectral e RS): " << param.spectral_e_RS << std::endl;
-    std::cout << "Electron RS Energy Fraction (epsilon e RS): " << param.epsilon_e_RS << std::endl;
-    std::cout << "Electron RS Acceleration Fraction (fraction e RS): " << param.fraction_e_RS << std::endl;
-    std::cout << "Electron RS Acceleration Efficiency (eta acc e RS): " << param.eta_acc_e_RS << std::endl;
-    std::cout << "Magnetic RS Energy Fraction (epsilon B RS): " << param.epsilon_B_RS << std::endl; 
     if (show_info) {
         std::cout << "Init jet " << std::endl;
     }
@@ -285,7 +259,7 @@ void GRBafterglow::Spectrum(std::vector<std::vector<double>>& flux_vector,
         InitJet(jet);
     }
 
-    int num = 6;
+    int num = 3;
 
     flux_vector.resize(num);
     for (size_t i = 0; i < num; i++) {
@@ -306,9 +280,6 @@ void GRBafterglow::Spectrum(std::vector<std::vector<double>>& flux_vector,
             flux_vector[0][j] = photon_syn[j];
             flux_vector[1][j] = photon_ssc[j];
             flux_vector[2][j] = photon_eic[j];
-            flux_vector[3][j] = photon_syn_RS[j];
-            flux_vector[4][j] = photon_ssc_RS[j];
-            flux_vector[5][j] = photon_eic_RS[j];
         }
 
     if (show_info) {
@@ -377,11 +348,6 @@ void GRBafterglow::CalculateLightCurveMCMC(std::vector<double>& flux_vector,
     std::cout << "Ejecta Duration (T ej): " << param.T_ej << " s" << std::endl;                          
 
 
-    std::cout << "Electron RS Spectral Index (spectral e RS): " << param.spectral_e_RS << std::endl;
-    std::cout << "Electron RS Energy Fraction (epsilon e RS): " << param.epsilon_e_RS << std::endl;
-    std::cout << "Electron RS Acceleration Fraction (fraction e RS): " << param.fraction_e_RS << std::endl;
-    std::cout << "Electron RS Acceleration Efficiency (eta acc e RS): " << param.eta_acc_e_RS << std::endl;
-    std::cout << "Magnetic RS Energy Fraction (epsilon B RS): " << param.epsilon_B_RS << std::endl; 
 
     // 1. Pre-allocate memory (Critical for speed)
     if (flux_vector.size() != time_array.size()) {
@@ -529,11 +495,6 @@ void GRBafterglow::FluxOutput(const std::vector<double>& time_array,
     std::cout << "Ejecta Duration (T ej): " << param.T_ej << " s" << std::endl;                          
 
 
-    std::cout << "Electron RS Spectral Index (spectral e RS): " << param.spectral_e_RS << std::endl;
-    std::cout << "Electron RS Energy Fraction (epsilon e RS): " << param.epsilon_e_RS << std::endl;
-    std::cout << "Electron RS Acceleration Fraction (fraction e RS): " << param.fraction_e_RS << std::endl;
-    std::cout << "Electron RS Acceleration Efficiency (eta acc e RS): " << param.eta_acc_e_RS << std::endl;
-    std::cout << "Magnetic RS Energy Fraction (epsilon B RS): " << param.epsilon_B_RS << std::endl; 
 
     // 1. Safety check
     if (energy_array_min.size() != energy_array_max.size()) {
@@ -556,21 +517,12 @@ void GRBafterglow::FluxOutput(const std::vector<double>& time_array,
     std::ofstream f_spec = open_file("spectrum.dat");
     std::ofstream f_flux = open_file("flux.dat");
     
-    // Only open RS files if needed to avoid creating empty files
-    std::ofstream f_spec_RS, f_flux_RS;
-    if (have_RS) {
-        f_spec_RS = open_file("spectrum_RS.dat");
-        f_flux_RS = open_file("flux_RS.dat");
-    }
-
     if (show_info) {
         f_flux << "# t (s)  Flux_Band_1  Flux_Band_2 ...\n";
-        if(have_RS) f_flux_RS << "# t (s)  Flux_Band_1  Flux_Band_2 ...\n";
     }
 
     // ----------------------------------------------------------------
     // Helper Lambda: Calculates Flux for specific bands
-    // Reduces code duplication between FS and RS
     // ----------------------------------------------------------------
     auto write_band_flux = [&](std::ofstream& stream, double t, 
                                const std::vector<double>& p_tot, 
@@ -626,26 +578,7 @@ void GRBafterglow::FluxOutput(const std::vector<double>& time_array,
         // --- 2. Forward Shock (FS) Flux Output ---
         write_band_flux(f_flux, t, photon_tot, photon_tot_diff);
 
-        // --- 3. Reverse Shock (RS) Output ---
-        if (have_RS) {
-            f_spec_RS << "# Time = " << t << "\n";
-            
-            for (size_t i = 0; i < num_p; i++) {
-                // Update total arrays with RS data for the helper function
-                photon_tot[i] = photon_syn_RS[i] + photon_ssc_RS[i] + photon_eic_RS[i];
-                
-                double inv_E = 1.0 / photon_energy[i];
-                photon_tot_diff[i] = photon_tot[i] * inv_E;
 
-                f_spec_RS << photon_energy[i] << " " 
-                          << photon_syn_RS[i] << " "
-                          << photon_ssc_RS[i] << " " 
-                          << photon_eic_RS[i] << "\n";
-            }
-            f_spec_RS << "\n\n"; // Gnuplot separator
-
-            write_band_flux(f_flux_RS, t, photon_tot, photon_tot_diff);
-        }
     }
 
     // Files close automatically when destructors are called.
@@ -940,277 +873,6 @@ void GRBafterglow::Spectrum(double T) {
 
     } // --- END PARALLEL REGION ---
 
-    if (have_RS) {
-        ReverseShock(jet); // Note: ReverseShock also needs parallelization similar to above!
-    }
-}
-
-void GRBafterglow::ReverseShock(Jet& jet) {
-
-    // 1. Setup Constants & Decay Indices
-    double Delta0 = param.T_ej / (1.0 + param.z) * c_cnst; 
-    double R_dec = DecelerationRadius();
-    
-    double g_med = (param.k_ex > 0.1) ? 2.0 : 0.0; 
-    
-    double r_index_density, r_index_B;
-    bool is_thick_shell = (Delta0 > R_dec / (2.0 * param.Gamma0 * param.Gamma0));
-
-    if (!is_thick_shell) {
-        // Thin Shell case
-        Delta0 = R_dec / (2.0 * param.Gamma0 * param.Gamma0);
-        r_index_density = -6.0 * (3.0 + g_med) / 7.0; 
-        r_index_B       = -4.0 * (3.0 + g_med) / 7.0; 
-    } else {
-        // Thick Shell case
-        r_index_density = -13.0 / 2.0;
-        r_index_B       = -13.0 / 3.0;
-    }
-
-    // 2. Reset Global Accumulators
-    photon_syn_RS.assign(num_p, 0.0);
-    photon_ssc_RS.assign(num_p, 0.0);
-    photon_eic_RS.assign(num_p, 0.0);
-
-    // -------------------------------------------------------------------------
-    // OPENMP PARALLEL REGION
-    // -------------------------------------------------------------------------
-    //#pragma omp parallel
-    {
-        // --- A. Setup Thread-Local Objects ---
-        // Clone the Source object to ensure thread safety for internal state (spectra, B-field)
-        Source local_s = this->s; 
-        
-        // Get references to local modules
-        Synchrotron& local_syn = local_s.GetSynchrotron();
-        InverseCompton& local_IC = local_s.GetIC();
-        ElectronDistribution& local_ElectronD = local_s.GetElectronD();
-        GammaGamma& local_gg = local_s.GetGG();
-        
-        // Thread-local Accumulators
-        std::vector<double> local_photon_syn_RS(num_p, 0.0);
-        std::vector<double> local_photon_ssc_RS(num_p, 0.0);
-        std::vector<double> local_photon_eic_RS(num_p, 0.0);
-        
-        // Reusable Scratchpads
-        std::vector<double> local_electron_N(num_e);
-        std::vector<double> local_target_syn(num_t);
-        std::vector<double> local_photon_temp(num_p);
-        std::vector<double> local_absorption_SSA(num_p);
-        std::vector<double> local_losstime(num_p);
-
-        // ---------------------------------------------------------------------
-        // INTERNAL LAMBDA: Calculates Radiation (Captures LOCAL objects)
-        // ---------------------------------------------------------------------
-        auto calculate_patch_radiation = [&](double mag_B, double delta_s_local, 
-                                             double doppler_local, double EATS_fac,
-                                             std::vector<double>& electron_dist_N,   
-                                             std::vector<double>& target_photon_density 
-                                            ) {
-            
-            // 1. Synchrotron
-            // Use local_s properties (x_e) and local modules
-            const auto& x_e = local_s.getElectron().getEnergy();
-            
-            local_syn.Emissivity(mag_B, x_e, electron_dist_N, photon_energy, local_photon_temp);
-            for (size_t k = 0; k < num_p; k++) local_photon_temp[k] *= photon_energy[k]; // Convert to Flux
-
-            // Store pure synchrotron flux for summation
-            std::vector<double> syn_flux_pure = local_photon_temp;
-
-            // 2. SSC
-            std::vector<double> ssc_flux_pure(num_p, 0.0);
-            if (have_SSCSpec) {
-                local_IC.Emissivity(target_energy, target_photon_density, x_e, electron_dist_N, photon_energy, local_photon_temp);
-                for (size_t k = 0; k < num_p; k++) ssc_flux_pure[k] = local_photon_temp[k] * photon_energy[k];
-            }
-
-            // D. Absorption & Accumulation
-            double shift_ratio = (1.0 + param.z) / doppler_local;
-            
-            // Calculate Absorption Coefficients locally
-            if (have_attenu_SSA) local_syn.SSAAbsorptionCoeff(mag_B, local_absorption_SSA);
-            if (have_attenu_GG_source) local_gg.Losstime(target_energy, target_photon_density, photon_energy, local_losstime);
-
-            for (size_t k = 0; k < num_p; k++) {
-                double shifted_E = photon_energy[k] * shift_ratio;
-                double att = 1.0;
-
-                // SSA
-                if (have_attenu_SSA) {
-                    double alpha = utility.Interpolate(photon_energy, local_absorption_SSA, shifted_E) / doppler_local;
-                    double tau = alpha * delta_s_local;
-                    att *= (tau > 1e-4) ? (1. - exp(-tau))/tau : 1.0 - tau/2.0;
-                }
-                // GG
-                if (have_attenu_GG_source) {
-                     double alpha = utility.Interpolate(photon_energy, local_losstime, shifted_E) / doppler_local / c_cnst;
-                     double tau = alpha * delta_s_local;
-                     att *= (tau > 1e-4) ? (1. - exp(-tau))/tau : 1.0 - tau/2.0;
-                }
-
-                // Interpolation Helper
-                auto get_obs = [&](const std::vector<double>& src) {
-                    return utility.Interpolate(photon_energy, src, shifted_E) * (doppler_local * doppler_local) / (4 * PI) * att * delta_s_local;
-                };
-
-                // Accumulate into THREAD-LOCAL vectors
-                double common = EATS_fac * photon_energy[k] * eV2erg;
-                local_photon_syn_RS[k] += common * get_obs(syn_flux_pure);
-                if(have_SSCSpec) local_photon_ssc_RS[k] += common * get_obs(ssc_flux_pure);
-            }
-        };
-
-        // ---------------------------------------------------------------------
-        // PARALLEL LOOP
-        // ---------------------------------------------------------------------
-        //#pragma omp for schedule(dynamic)
-        for (size_t i = 0; i < jet.theta.size(); i++) {
-            
-            size_t phi_limit = (param.view_angle < 1e-5) ? 1 : jet.phi.size();
-
-            for (size_t j = 0; j < phi_limit; j++) {
-                
-                // --- 1. Geometry & Kinematics ---
-                double Gamma = jet.Gamma_RS[i][j];
-                double R_curr = jet.radius_RS[i][j];
-                double mu = jet.mu[i][j];
-
-                if (Gamma <= 1.0) continue; 
-
-                double beta = sqrt(1.0 - 1.0/(Gamma*Gamma));
-                
-                double gamma_hat = (4.0 * Gamma + 1.0) / (3.0 * Gamma);
-                double gamma_sh = sqrt(((Gamma+1)*(gamma_hat*(Gamma-1)+1)*(gamma_hat*(Gamma-1)+1)) / 
-                                       (gamma_hat*(2-gamma_hat)*(Gamma-1)+2));
-                double beta_sh = sqrt(1.0 - 1.0/(gamma_sh*gamma_sh));
-
-                double doppler_factor = 1.0 / (Gamma * (1.0 - beta * mu));
-                
-                double solid_angle = (param.view_angle < 1e-5) 
-                                   ? 2 * PI * jet.theta_bin[i] * sin(jet.theta[i])
-                                   : jet.theta_bin[i] * sin(jet.theta[i]) * jet.phi_bin[j];
-
-                double EATS_factor = solid_angle * R_curr * R_curr * std::abs(mu - beta_sh) / (1.0 - beta_sh * mu) * (1.0 + param.z) / (param.dl * param.dl);
-
-                // --- 2. Determine State ---
-                double mag_strength = 0.0;
-                double delta_s = 0.0;
-                bool active = false;
-                double electron_inj = 0.0;
-                double photon_escape = 0.0;
-
-                double N0_iso = jet.E_ej[i] / (jet.Gamma0[i] * mp * c_cnst * c_cnst);
-
-                // Prepare Inputs for Solver
-                // Use GLOBAL prompt target as base (Read-Only)
-                std::vector<double> local_input_target = target_prompt; 
-
-                if (jet.mass_ejecta[i][j] <= jet.M_ej[i]) {
-                    // PHASE 1: SHELL CROSSING
-                    double Gamma34 = 0.5 * (Gamma / jet.Gamma0[i] + jet.Gamma0[i] / Gamma);
-                    
-                    if (Gamma34 > 1.0001) {
-                        active = true;
-                        
-                        double n4 = N0_iso / (4 * PI * jet.Gamma0[i] * Delta0 * R_curr * R_curr);
-                        double n3 = (4.0 * Gamma34 + 3.0) * n4; 
-                        double e3 = (Gamma34 - 1.0) * n3 * mp * c_cnst * c_cnst; 
-                        
-                        double width_comoving = N0_iso * (jet.mass_ejecta[i][j]/jet.M_ej[i]) 
-                                                / (4 * PI * R_curr * R_curr * n3);
-                        delta_s = (width_comoving / Gamma) / std::abs(mu - beta_sh);
-
-                        mag_strength = sqrt(8 * PI * param.epsilon_B_RS * e3);
-                        local_s.getParam().setMagStrength(mag_strength); // Set LOCAL B-field
-
-                        photon_escape = width_comoving / c_cnst * 2.0;
-                        electron_inj = param.fraction_e_RS * n3 / jet.dynamical_timescale[i][j];
-
-                        // Set LOCAL Electron Spectrum
-                        local_s.getElectron().setSpectrumPL(
-                            MomentumInj(Gamma34, mag_strength, R_curr, beta, param.epsilon_e_RS, param.fraction_e_RS, param.spectral_e_RS, param.eta_acc_e_RS),
-                            MomentumMax(mag_strength, R_curr, Gamma34, param.eta_acc_e_RS),
-                            param.spectral_e_RS, electron_inj, false);
-                    }
-
-                } else {    
-                    // PHASE 2: POST-CROSSING
-                    active = true;
-                    double R_cross = jet.radius_cross[i][j];
-                    double ratio = R_curr / R_cross; 
-                    
-                    if(R_cross > 0) {
-                        double Gamma34_cross = 0.5 * (jet.Gamma_cross[i][j]/jet.Gamma0[i] + jet.Gamma0[i]/jet.Gamma_cross[i][j]);
-                        double n4_cross = N0_iso / (4*PI*jet.Gamma0[i]*Delta0*R_cross*R_cross);
-                        double n3_cross = (4*Gamma34_cross+3)*n4_cross;
-                        double e3_cross = (Gamma34_cross-1)*n3_cross*mp*c_cnst*c_cnst;
-                        double B_cross = sqrt(8*PI*param.epsilon_B_RS*e3_cross);
-                        
-                        mag_strength = B_cross * pow(ratio, r_index_B);
-                        local_s.getParam().setMagStrength(mag_strength); // Set LOCAL B-field
-
-                        double width_cross = N0_iso / (4*PI*R_cross*R_cross*n3_cross);
-                        double width_comoving = width_cross * pow(ratio, 1.0); 
-                        delta_s = (width_comoving / Gamma) / std::abs(mu - beta_sh);
-                        
-                        double beta = sqrt(1.0 - 1.0/(jet.Gamma_cross[i][j]*jet.Gamma_cross[i][j]));
-                        double Gamma_min_new = MomentumInj(Gamma34_cross, B_cross, R_cross, beta, param.epsilon_e_RS, param.fraction_e_RS, param.spectral_e_RS, param.eta_acc_e_RS  ) * pow(ratio, -1.0);
-                        double n_norm_new = (param.fraction_e_RS * n3_cross) * pow(ratio, r_index_density);
-                        
-                        photon_escape = width_comoving / c_cnst * 2.0;
-                        
-                        // Set LOCAL Electron Spectrum
-                        local_s.getElectron().setSpectrumPL(
-                            Gamma_min_new,
-                            MomentumMax(mag_strength, R_curr, Gamma34_cross, param.eta_acc_e_RS), 
-                            param.spectral_e_RS, 
-                            n_norm_new / jet.dynamical_timescale[i][j], 
-                            false
-                        );
-                    } else {
-                        active = false;
-                    }
-                }
-
-                // --- 3. Run Calculations if Active ---
-                if (active) {
-                    // Get the Injection Source Function from the LOCAL object
-                    // This reflects the setSpectrumPL call above
-                    std::vector<double> local_electron_Q = local_s.getElectron().getSpectrum(); 
-
-                    // Solve Evolution
-                    // IMPORTANT: Ensure IterationSolution writes to local_electron_N and local_target_syn
-                    local_ElectronD.IterationSolution(
-                        local_syn, local_IC, have_EICSpec, 
-                        jet.dynamical_timescale[i][j], jet.adiabatic_timescale[i][j], photon_escape, mag_strength,
-                        local_electron_Q,    // Input Q
-                        local_input_target,  // Input Target (Prompt)
-                        local_electron_N,    // Output N (Buffer)
-                        local_target_syn     // Output Target (Buffer)
-                    );
-
-                    // Compute Emission and Accumulate
-                    calculate_patch_radiation(mag_strength, delta_s, doppler_factor, EATS_factor,
-                                            local_electron_N, local_target_syn);
-                }
-
-            } // End Phi Loop
-        } // End Theta Loop
-
-        // ---------------------------------------------------------------------
-        // REDUCTION (Merge thread-local results to global)
-        // ---------------------------------------------------------------------
-        //#pragma omp critical
-        {
-            for(size_t k=0; k<num_p; ++k) {
-                photon_syn_RS[k] += local_photon_syn_RS[k];
-                photon_ssc_RS[k] += local_photon_ssc_RS[k];
-                if(have_EICSpec) photon_eic_RS[k] += local_photon_eic_RS[k];
-            }
-        }
-
-    } // --- END PARALLEL REGION ---
 }
 
 double GRBafterglow::MomentumInj(double Gamma, double mag_strength,

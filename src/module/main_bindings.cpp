@@ -270,11 +270,6 @@ void bind_grbafterglow(py::module_& m) {
              "Order: z, dl, E_iso, Gamma0, n_ex, ...",
              py::arg("params"))
 
-        .def("setGRBafterglowRSParam", &GRBafterglow::setGRBafterglowRSParam,
-             "Set Reverse Shock Parameters. Expects list/array of 8 floats.\n"
-             "Order: spec_e_RS, eps_e_RS, frac_e_RS, ...",
-             py::arg("params"))
-
 // --- MCMC Parameter Setter ---
         // Expects a single list of parameters (log10 or linear as defined in your C++)
         .def("set_params_mcmc", &GRBafterglow::setParamsFromMCMC,
@@ -312,7 +307,6 @@ void bind_grbafterglow(py::module_& m) {
         .def("haveOneZone", &GRBafterglow::haveOneZone)
         .def("haveAttenuSSA", &GRBafterglow::haveAttenuSSA)
         .def("haveAttenuGGSource", &GRBafterglow::haveAttenuGGSource)
-        .def("haveReverseShock", &GRBafterglow::haveReverseShock)
         .def("Flux",
             [](GRBafterglow& self, 
                const std::vector<double>& time_array,

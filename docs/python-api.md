@@ -13,7 +13,6 @@ import AMES
 source = AMES.Source()
 source.InitSource()
 afterglow = AMES.GRBafterglow(source)
-afterglow.haveReverseShock(False)
 ```
 
 Keep `source` alive while using `afterglow`: the engine holds a C++ reference.
@@ -30,7 +29,6 @@ The snippet above only illustrates construction, not a complete calculation.
 | `haveSSCSpec(enabled)` | Toggle SSC calculation |
 | `haveAttenuSSA(enabled)` | Toggle synchrotron self-absorption |
 | `haveAttenuGGSource(enabled)` | Toggle internal gamma-gamma attenuation |
-| `haveReverseShock(enabled)` | Toggle the reverse-shock path; examples explicitly use `False` |
 | `haveOneZone(enabled)` | Select the one-zone path; outside the introductory examples |
 | `showInfo(enabled)` | Toggle some diagnostics; some C++ output remains unconditional |
 
@@ -47,25 +45,25 @@ Return shape: **[number of times, number of bands]**.
 Equal energy limits request monochromatic nu F_nu. Unequal limits request
 integrated energy flux. The current implementation treats a separation below
 1e-5 eV as monochromatic. All returned fluxes have units erg cm^-2 s^-1.
-The forward total is synchrotron + SSC + EIC; it does not include RS components.
+The forward total is synchrotron + SSC + EIC; reverse-shock emission is not included in this version.
 
 ## `Spectrum(T)`
 
 Compute component spectra at observer time `T` [s]. Return shape:
-**[6, number of photon grid points]**.
+**[3, number of photon grid points]**.
 
 | Row | Component |
 | --- | --- |
 | 0 | Forward-shock synchrotron |
 | 1 | Forward-shock SSC |
 | 2 | Forward-shock EIC |
-| 3 | Reverse-shock synchrotron |
-| 4 | Reverse-shock SSC |
-| 5 | Reverse-shock EIC |
 
 Get the matching energy axis [eV] from `source.getPhoton().getEnergy()`.
 Fluxes represent nu F_nu [erg cm^-2 s^-1]. Disabled components may be zero.
-Save the first three rows transposed beside the energy grid for FS output.
+Save the three rows transposed beside the energy grid for FS output.
+
+The former RS rows 3–5 and the `haveReverseShock` and
+`setGRBafterglowRSParam` methods have been removed. RS dynamics remain in C++.
 
 ## Additional exposed methods
 
@@ -77,9 +75,8 @@ Exposure does not establish validation of a feature.
 | `Flux1D(time, freq_min, freq_max)` | One band per time, returning a list of length N; all three arrays must have length N. Despite names, limits are **eV**, not Hz. Uses the same 1e-5 eV threshold as `Flux`. |
 | `set_params_mcmc(theta)` | Reads seven entries: log10(E_ej), log10(n_ex), p, log10(epsilon_e), log10(epsilon_B), log10(fraction_e), view_angle. No length/range checks here. Set the base model first. |
 | `calculate_lightcurve(time, freq)` | Paired time/energy arrays of equal length; despite `freq`, input is **eV**. Initialize via the MCMC setter first. Returns a list of N monochromatic FS fluxes. |
-| `setGRBafterglowRSParam(params)` | Five entries, documented in [parameters](parameters.md); outside the FS guide. |
 | `setOutputFolder(path)` | Select the existing directory used by `FluxOutput`; does not create it. |
-| `FluxOutput(times, low, high)` | C++ writer, returns `None`; writes `flux.dat` and time-blocked `spectrum.dat`, plus separate RS files when enabled. FS spectrum columns: energy, synchrotron, SSC, EIC. |
+| `FluxOutput(times, low, high)` | C++ writer, returns `None`; writes `flux.dat` and time-blocked `spectrum.dat`. FS spectrum columns: energy, synchrotron, SSC, EIC. |
 
 `FluxOutput` uses a relative band-equality threshold of 1e-10 times the minimum
 energy, unlike `Flux`. Do not assume nearly equal band limits behave identically.
@@ -90,6 +87,6 @@ Its file output uses six digits after the decimal in scientific notation.
 Input validation is incomplete: check finite positive times, array lengths,
 parameter order, and energy bounds in calling code. A wrong-size forward
 parameter list prints an error and returns rather than raising a Python exception.
-Several binding docstrings are stale (21 FS parameters, eight RS parameters,
+Several binding docstrings are stale (21 FS parameters,
 and NumPy return types); this guide follows the implementation instead.
 C++ public declarations are not automatically available in Python.

@@ -50,11 +50,8 @@ power-law distribution proportional to energy^-p.
 - Output monochromatic flux: nu F_nu in erg cm^-2 s^-1.
 - Output band-integrated flux: erg cm^-2 s^-1.
 
-## Reverse-shock setter (advanced)
+## Reverse-shock dynamics
 
-The current implementation reads five values in this order:
-`spectral_e_RS`, `epsilon_e_RS`, `fraction_e_RS`, `eta_acc_e_RS`, `epsilon_B_RS`.
-Supply exactly five, although its helper currently accepts and ignores trailing
-entries. The binding docstring saying eight entries is outdated.
-Reverse shock is disabled in the introductory examples. This section records
-the input layout; it is not validation of that physical branch.
+Reverse-shock emission and its microphysical parameter setter have been removed
+from this version. The dynamical evolution, including `EvolutionThickShell`,
+RS state variables, and ejecta duration `T_ej`, is retained.

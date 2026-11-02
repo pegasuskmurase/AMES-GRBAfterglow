@@ -29,6 +29,5 @@ def build_model(parameters):
     engine.haveSSCSpec(True)
     engine.haveAttenuSSA(True)
     engine.haveAttenuGGSource(True)
-    engine.haveReverseShock(False)
     engine.showInfo(True)
     return source, engine
